@@ -55,19 +55,20 @@ class EntradasSaidasController extends Controller
             )
             ->orderBy('etetickets.data', 'desc');
     
-        // Filtro de data
+        // Aplica o filtro de data, se fornecido e se ticket ou placa não estão definidos
         if ($dataInicial && $dataFinal) {
             $query->whereBetween('etetickets.data', [$dataInicial, $dataFinal]);
-        } else {
-            $query->whereBetween('etetickets.data', [now()->subDays(30), now()]);
+        } else if (!$ticket && !$placa) {
+            // Aplica o filtro de 30 dias apenas quando não há filtros de ticket ou placa
+            $query->whereBetween('etetickets.data', [now()->subDays(7), now()]);
         }
     
-        // Filtro de ticket
+        // Aplica o filtro de ticket, se fornecido
         if ($ticket) {
             $query->where('etetickets.ticket', $ticket);
         }
     
-        // Filtro de placa
+        // Aplica o filtro de placa, se fornecido
         if ($placa) {
             $query->where('etetickets.placa', $placa);
         }
@@ -77,8 +78,6 @@ class EntradasSaidasController extends Controller
     
         return response()->json($entradasSaidas);
     }
-    
-
     
     // Método para buscar um registro específico pelo id
     public function show($id)

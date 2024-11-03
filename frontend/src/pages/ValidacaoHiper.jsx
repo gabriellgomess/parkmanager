@@ -43,7 +43,12 @@ const ValidacaoHiper = () => {
     if (ticket) params.ticket = ticket;
     if (placa) params.placa = placa;
 
-    axios.get(`${config.APP_URL}/api/hiper`, { params })
+    axios.get(`${config.APP_URL}/api/hiper`, {
+        params,
+        headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        }
+    })
         .then((response) => {
             handleClose();
             setData(response.data);

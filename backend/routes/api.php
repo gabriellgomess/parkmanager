@@ -13,10 +13,6 @@ use App\Http\Controllers\TerminaisController;
 Route::post("register", [AuthController::class, "register"]);
 Route::post("login", [AuthController::class, "login"]);
 
-// Rotas de Entradas e Saídas
-Route::get("entradas-saidas", [EntradasSaidasController::class, "index"]);
-Route::get('hiper', [LogHiperController::class, 'index']);
-Route::get('terminais', [TerminaisController::class, 'index']);
 
 // Rotas protegidas
 Route::group(["middleware" => ["auth:sanctum"]], function () {
@@ -28,6 +24,11 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
     Route::post("users", [UserController::class, "store"]);
     Route::put("users/{id}", [UserController::class, "update"]);
     Route::delete("users/{id}", [UserController::class, "destroy"]);
+
+    // Rotas de Entradas e Saídas
+    Route::get("entradas-saidas", [EntradasSaidasController::class, "index"]);
+    Route::get('hiper', [LogHiperController::class, 'index']);
+    Route::get('terminais', [TerminaisController::class, 'index']);
 });
 
 

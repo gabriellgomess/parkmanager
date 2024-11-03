@@ -44,7 +44,11 @@ const Terminais = () => {
 
     useEffect(() => {
         setOpenBackdrop(true);
-        axios.get(`${config.APP_URL}/api/terminais`) // Usa config em vez da variável de ambiente
+        axios.get(`${config.APP_URL}/api/terminais`, {
+            headers: {
+                Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+              },
+        }) // Usa config em vez da variável de ambiente
             .then((response) => {
                 setOpenBackdrop(false);
                 setTerminais(response.data);                
