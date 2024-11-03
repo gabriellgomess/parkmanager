@@ -16,8 +16,7 @@ class EntradasSaidasController extends Controller
         $placa = $request->input('placa');
     
         // Define a tabela principal explicitamente
-        $query = EntradasSaidas::on('pgsql')
-            ->from('etetickets')
+        $query = EntradasSaidas::from('etetickets')
             ->leftJoin('etstickets', 'etetickets.ticket', '=', 'etstickets.ticket')
             ->select(
                 'etetickets.data as etetickets_data',

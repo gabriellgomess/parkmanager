@@ -9,9 +9,6 @@ class Terminais extends Model
 {
     use HasFactory;
 
-    // Define a conexão para PostgreSQL
-    protected $connection = 'pgsql';
-
     // Nome da tabela
     protected $table = 'ppmestacoes';
 

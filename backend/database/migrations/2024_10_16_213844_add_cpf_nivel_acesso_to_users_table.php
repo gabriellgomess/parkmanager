@@ -13,7 +13,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('cpf')->unique()->after('email');
+            $table->string('cpf')->unique()->default('00000000000')->after('email');
             $table->tinyInteger('nivel_acesso')->default(1)->after('cpf');
         });
 

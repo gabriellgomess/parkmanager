@@ -16,8 +16,7 @@ class LogHiperController extends Controller
         $placa = $request->input('placa');
 
         // Usa o modelo LogHiper e força a conexão 'pgsql' para a consulta
-        $query = LogHiper::on('pgsql')
-        ->leftJoin('etetickets', 'log_hiper.ticket', '=', 'etetickets.ticket')
+        $query = LogHiper::leftJoin('etetickets', 'log_hiper.ticket', '=', 'etetickets.ticket')
         ->leftJoin('etstickets', 'log_hiper.ticket', '=', 'etstickets.ticket')
         ->select(
             'log_hiper.*', 
@@ -53,7 +52,7 @@ class LogHiperController extends Controller
 
     public function show($id)
     {
-        $loghiper = LogHiper::on('pgsql')->find($id);
+        $loghiper = LogHiper::find($id);
 
         if (!$loghiper) {
             return response()->json(['error' => 'Registro não encontrado'], 404);
