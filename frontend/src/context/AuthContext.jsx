@@ -10,12 +10,23 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate(); // Hook para redirecionamento
+  const [config, setConfig] = useState(null); // Estado para a configuração
+  const navigate = useNavigate();
+
+  // Função para carregar o config.json
+  const loadConfig = async () => {
+    try {
+      const response = await axios.get('/config.json'); // Caminho para o config.json no public
+      setConfig(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
+    }
+  };
 
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_REACT_APP_URL}/api/login`, { email, password });
+      const response = await axios.post(`${config.APP_URL}/api/login`, { email, password });
       const { token } = response.data;
       sessionStorage.setItem('token', token);
       setAuthToken(token);
@@ -31,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   const getUser = async () => {
     let tokenProfile = sessionStorage.getItem('token');
     try {
-      const response = await axios.get(`${import.meta.env.VITE_REACT_APP_URL}/api/profile`, {
+      const response = await axios.get(`${config.APP_URL}/api/profile`, {
         headers: {
           Authorization: `Bearer ${tokenProfile}`,
         },
@@ -40,18 +51,21 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.info("Get User: ", err);
     }
-  }
+  };
 
   useEffect(() => {
-    if (authToken) {
+    loadConfig(); // Carrega a configuração ao iniciar
+  }, []);
+
+  useEffect(() => {
+    if (authToken && config) {
       getUser();
     }
-  }, [authToken]);
-
+  }, [authToken, config]); // Executa getUser somente quando config está disponível
 
   const logout = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_REACT_APP_URL}/api/logout`, {}, {
+      await axios.post(`${config.APP_URL}/api/logout`, {}, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -59,14 +73,16 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.removeItem('token');
       setAuthToken(null);
       setUser(null);
-      navigate('/'); // Redirecionar para a página pública após o logout
+      navigate('/');
     } catch (err) {
       setError('Erro ao fazer logout');
     }
   };
 
+  if (!config) return <p>Carregando configuração...</p>; // Exibe loading até o config estar disponível
+
   return (
-    <AuthContext.Provider value={{ authToken, login, logout, user, loading, error }}>
+    <AuthContext.Provider value={{ authToken, login, logout, user, loading, error, config }}>
       {children}
     </AuthContext.Provider>
   );

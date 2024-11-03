@@ -6,18 +6,17 @@ import BgHome from '../assets/bg-home.jpg';
 
 const Home = () => {
   const [open, setOpen] = useState(false);
-  const { login, loading, error } = useContext(AuthContext);
+  const { login, loading, error, config } = useContext(AuthContext); // Pegue o config do contexto
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const theme = useTheme();
-  // const isXs = useMediaQuery(theme.breakpoints.down('xs'));
   const isSm = useMediaQuery(theme.breakpoints.up('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
   const isLg = useMediaQuery(theme.breakpoints.up('lg'));
   const isXl = useMediaQuery(theme.breakpoints.up('xl'));
 
-  let variant = 'h5'; // Default para xs
+  let variant = 'h5';
 
   if (isXl) {
     variant = 'h2';
@@ -31,11 +30,21 @@ const Home = () => {
 
   const handleLogin = async () => {
     await login(email, password);
-    setOpen(false);  // Fecha modal após login
+    setOpen(false);
   };
 
   return (
-    <div style={{ backgroundImage: `url(${BgHome})`, backgroundSize: 'cover', backgroundPositionX: '50%', backgroundPositionY: '50%', width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+    <div style={{
+      backgroundImage: `url(${BgHome})`,
+      backgroundSize: 'cover',
+      backgroundPositionX: '50%',
+      backgroundPositionY: '50%',
+      width: '100vw',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between'
+    }}>
       <div style={{ display: 'flex', justifyContent: 'end', padding: '20px 30px 0 0 ' }}>
         <Button onClick={() => setOpen(true)} variant="contained">Login</Button>
       </div>
@@ -54,10 +63,10 @@ const Home = () => {
             textShadow: '4px 4px 3px rgba(0,0,0,0.5)',
           }}
         >
-          {`${import.meta.env.VITE_REACT_APP_TITLE_HOME}`}
+          {config?.APP_TITLE_HOME || 'Título padrão'} {/* Usa o título do config */}
         </Typography>
         <Typography variant="h6" align="center" style={{ color: '#fff', textShadow: '4px 4px 3px rgba(0,0,0,0.5)' }}>
-          {`${import.meta.env.VITE_REACT_APP_SUBTITLE_HOME}`}
+          {config?.APP_SUBTITLE_HOME || 'Subtítulo padrão'} {/* Usa o subtítulo do config */}
         </Typography>
       </Box>
 
@@ -66,7 +75,6 @@ const Home = () => {
           &copy; NexusTech {new Date().getFullYear()} - Todos os direitos reservados
         </Typography>
       </Box>
-
 
       <Modal open={open} onClose={() => setOpen(false)} sx={{ position: 'absolute', top: '40%' }}>
         <Box sx={{ padding: 3, backgroundColor: '#fff', margin: 'auto', width: '300px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

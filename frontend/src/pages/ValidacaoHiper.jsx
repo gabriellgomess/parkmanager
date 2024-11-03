@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { Box, Typography, TextField, Button, Backdrop, Card, CardContent, Tooltip } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -10,8 +10,10 @@ import { DataGrid } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import AuthContext from '../context/AuthContext'; // Importa o contexto
 
 const ValidacaoHiper = () => {
+  const { config } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -41,7 +43,7 @@ const ValidacaoHiper = () => {
     if (ticket) params.ticket = ticket;
     if (placa) params.placa = placa;
 
-    axios.get(`${import.meta.env.VITE_REACT_APP_URL}/api/hiper`, { params })
+    axios.get(`${config.APP_URL}/api/hiper`, { params })
         .then((response) => {
             handleClose();
             setData(response.data);

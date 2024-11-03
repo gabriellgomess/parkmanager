@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import {
   Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
@@ -12,10 +12,11 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AlertSnackbar from '../components/AlertSnackbar';
 import Tooltip from '@mui/material/Tooltip';
-
-const apiUrl = `${import.meta.env.VITE_REACT_APP_URL}/api/users`;
+import AuthContext from '../context/AuthContext'; // Importa o contexto
 
 const Users = () => {
+  const { config } = useContext(AuthContext); // Pega o config do contexto
+  const apiUrl = `${config.APP_URL}/api/users`; // Usa config em vez da variável de ambiente
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -35,9 +36,9 @@ const Users = () => {
     nivel_acesso: '',
     password: '',
     confirmPassword: '',
-    profile_photo: null, // Campo para foto de perfil
-    existing_profile_photo: null, // Armazena a foto atual no caso de edição
-    preview_photo: null // Previsão da nova imagem
+    profile_photo: null,
+    existing_profile_photo: null,
+    preview_photo: null,
   });
 
   const passwordRequirements = {
@@ -74,7 +75,7 @@ const Users = () => {
     }
 
     try {
-      const formDataToSend = new FormData(); // Usando FormData para enviar arquivo
+      const formDataToSend = new FormData();
 
       if (formData.name) formDataToSend.append('name', formData.name);
       if (formData.email) formDataToSend.append('email', formData.email);
@@ -82,9 +83,6 @@ const Users = () => {
       if (formData.nivel_acesso) formDataToSend.append('nivel_acesso', formData.nivel_acesso);
       if (formData.password) formDataToSend.append('password', formData.password);
 
-      console.log("Form Data: ", formData);
-
-      // Verificar se a imagem foi removida
       if (!formData.profile_photo) {
         formDataToSend.append('profile_photo', null);
         formDataToSend.append('remove_photo', true);
@@ -114,12 +112,14 @@ const Users = () => {
 
       fetchUsers();
       setOpenModal(false);
-      setFormData({ id: null, name: '', email: '', cpf: '', nivel_acesso: '', password: '', confirmPassword: '', profile_photo: null, existing_profile_photo: null, preview_photo: null });
+      setFormData({
+        id: null, name: '', email: '', cpf: '', nivel_acesso: '',
+        password: '', confirmPassword: '', profile_photo: null, existing_profile_photo: null, preview_photo: null
+      });
     } catch (error) {
       handleOpenAlert('Erro ao salvar usuário', 'error');
     }
   };
-
 
   const handleDeleteUser = async (id) => {
     try {
@@ -142,11 +142,14 @@ const Users = () => {
         password: '',
         confirmPassword: '',
         profile_photo: null,
-        existing_profile_photo: user.profile_photo, // Armazena a foto existente
-        preview_photo: null // Limpa a pré-visualização
+        existing_profile_photo: user.profile_photo,
+        preview_photo: null,
       });
     } else {
-      setFormData({ id: null, name: '', email: '', cpf: '', nivel_acesso: '', password: '', confirmPassword: '', profile_photo: null, existing_profile_photo: null, preview_photo: null });
+      setFormData({
+        id: null, name: '', email: '', cpf: '', nivel_acesso: '',
+        password: '', confirmPassword: '', profile_photo: null, existing_profile_photo: null, preview_photo: null
+      });
     }
     setOpenModal(true);
   };
@@ -172,14 +175,11 @@ const Users = () => {
     setAlertData({ ...alertData, open: false });
   };
 
-  // Função para capturar o upload da foto e exibir pré-visualização
   const handleProfilePhotoChange = (event) => {
     const file = event.target.files[0];
 
-    console.log("File: ", file);
-
     if (file) {
-      const maxSizeInMB = 2; // Defina o tamanho máximo em MB (2 MB)
+      const maxSizeInMB = 2;
       const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
       if (file.size > maxSizeInBytes) {
         handleOpenAlert(`A imagem deve ser menor que ${maxSizeInMB}MB`, 'error');
@@ -191,7 +191,6 @@ const Users = () => {
     }
   };
 
-  // Função para remover a imagem de perfil
   const handleRemovePhoto = () => {
     setFormData({ ...formData, profile_photo: null, preview_photo: null, existing_profile_photo: null });
   };
@@ -215,7 +214,7 @@ const Users = () => {
         <Typography>Carregando...</Typography>
       ) : (
         <>
-          <TableContainer sx={{display: {xs: 'none', sm: 'none', md: 'block'}}} component={Paper}>
+          <TableContainer sx={{ display: { xs: 'none', sm: 'none', md: 'block' } }} component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -230,19 +229,19 @@ const Users = () => {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell><Avatar alt={user?.name} src={`${import.meta.env.VITE_REACT_APP_URL}/storage/${user?.profile_photo}`} /></TableCell>
+                    <TableCell><Avatar alt={user?.name} src={`${config.APP_URL}/storage/${user?.profile_photo}`} /></TableCell>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.cpf}</TableCell>
                     <TableCell>{user.nivel_acesso}</TableCell>
                     <TableCell>
                       <Tooltip title="Editar usuário" arrow>
-                        <IconButton disabled={user.email === 'admin@admin' ? true : false} color="primary" onClick={() => openUserModal(user)}>
+                        <IconButton disabled={user.email === 'admin@admin'} color="primary" onClick={() => openUserModal(user)}>
                           <ManageAccountsIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Remover usuário" arrow>
-                        <IconButton disabled={user.email === 'admin@admin' ? true : false} color="error" onClick={() => handleDeleteUser(user.id)}>
+                        <IconButton disabled={user.email === 'admin@admin'} color="error" onClick={() => handleDeleteUser(user.id)}>
                           <PersonRemoveIcon />
                         </IconButton>
                       </Tooltip>
@@ -252,38 +251,37 @@ const Users = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          {/* Renderização de cards quando for mobile */}
-          <Box sx={{display: {xs: 'block', sm: 'block', md: 'none'}}}>
+          <Box sx={{ display: { xs: 'block', sm: 'block', md: 'none' } }}>
             {users.map((user) => (
-              <Box key={user.id} sx={{display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid #ccc', borderRadius: '5px', p: 2, mb: 2}}>
-                <Box sx={{display: 'flex', gap: '15px', alignItems: 'center'}}>
-                  <Avatar alt={user?.name} src={`${import.meta.env.VITE_REACT_APP_URL}/storage/${user?.profile_photo}`} />
-                    <Typography variant="h6">{user.name}</Typography>                 
+              <Box key={user.id} sx={{ display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid #ccc', borderRadius: '5px', p: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  {console.log(`FOTO: ${config.APP_URL}/storage/${user?.profile_photo}`)}
+                  <Avatar alt={user?.name} src={`${config.APP_URL}/storage/${user?.profile_photo}`} />
+                  <Typography variant="h6">{user.name}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: '10px' }}>
+                  <Box>
+                    <Typography variant="body2">{user.email}</Typography>
+                    <Typography variant="body2">{user.cpf}</Typography>
+                    <Typography variant="body2">{user.nivel_acesso}</Typography>
                   </Box>
-                  <Box sx={{display: 'flex', gap: '10px'}}>                 
-                    <Box>
-                      <Typography variant="body2">{user.email}</Typography>
-                      <Typography variant="body2">{user.cpf}</Typography>
-                      <Typography variant="body2">{user.nivel_acesso}</Typography>
-                    </Box>
-                  </Box>
-                <Box sx={{display: 'flex', justifyContent: 'end'}}>
-                    <Tooltip title="Editar usuário" arrow>
-                      <IconButton disabled={user.email === 'admin@admin' ? true : false} color="primary" onClick={() => openUserModal(user)}>
-                        <ManageAccountsIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Remover usuário" arrow>
-                      <IconButton disabled={user.email === 'admin@admin' ? true : false} color="error" onClick={() => handleDeleteUser(user.id)}>
-                        <PersonRemoveIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                  <Tooltip title="Editar usuário" arrow>
+                    <IconButton disabled={user.email === 'admin@admin'} color="primary" onClick={() => openUserModal(user)}>
+                      <ManageAccountsIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Remover usuário" arrow>
+                    <IconButton disabled={user.email === 'admin@admin'} color="error" onClick={() => handleDeleteUser(user.id)}>
+                      <PersonRemoveIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </Box>
             ))}
           </Box>
         </>
-        
       )}
 
       <AlertSnackbar
@@ -293,8 +291,8 @@ const Users = () => {
         severity={alertData.severity}
       />
 
-      {/* Modal para Criar/Editar Usuário */}
-      <Modal open={openModal} onClose={handleCloseModal}>
+     {/* Modal para Criar/Editar Usuário */}
+     <Modal open={openModal} onClose={handleCloseModal}>
         <Box
           sx={{
             position: 'absolute',
@@ -363,7 +361,7 @@ const Users = () => {
             ) : formData.existing_profile_photo ? (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
                 <Avatar
-                  src={`${import.meta.env.VITE_REACT_APP_URL}/storage/${formData.existing_profile_photo}`}
+                  src={`${config.APP_URL}/storage/${formData.existing_profile_photo}`}
                   alt="Foto atual"
                   sx={{ width: 100, height: 100 }}
                 />
@@ -435,7 +433,6 @@ const Users = () => {
                   {formData.password == formData.confirmPassword && formData.password.length > 0 ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />} Senhas coincidem
                 </Typography>
               </Box>
-            {console.log("TESTE: ", ((formData.password == formData.confirmPassword) && (formData.password.length > 0)))}
             </>
           )}
           <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end' }}>

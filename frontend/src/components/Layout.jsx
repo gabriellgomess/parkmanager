@@ -20,7 +20,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
 import { Link, useNavigate } from 'react-router-dom';
 import menuItems from './MenuItems';
-import AuthContext from '../context/AuthContext'; // Supondo que o AuthContext gerencia o logout
+import AuthContext from '../context/AuthContext';
 
 const drawerWidth = 240;
 
@@ -91,7 +91,7 @@ const Drawer = styled(MuiDrawer, {
 export default function Layout({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const { logout, user } = React.useContext(AuthContext); // Usa o contexto para fazer logout
+  const { logout, user, config } = React.useContext(AuthContext); // Obtém o config
   const navigate = useNavigate();
 
   const handleDrawerOpen = () => {
@@ -104,7 +104,6 @@ export default function Layout({ children }) {
 
   const handleMenuClick = (item) => {
     if (item.action === 'logout') {
-      // Executa o logout se for o item de Sair
       logout();
       navigate('/');
     }
@@ -125,10 +124,10 @@ export default function Layout({ children }) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            {`${import.meta.env.VITE_REACT_APP_NAME}`}
+            {config?.APP_NAME || 'Nome da Aplicação'} {/* Nome da aplicação do config */}
           </Typography>
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }} >
-            <Avatar alt={user?.name} src={`${import.meta.env.VITE_REACT_APP_URL}/storage/${user?.profile_photo}`} />
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Avatar alt={user?.name} src={`${config?.APP_URL}/storage/${user?.profile_photo}`} />
             <Box>
               <Typography variant="body2" sx={{ ml: 'auto', lineHeight: '1px' }}>
                 {user?.name}
@@ -138,8 +137,6 @@ export default function Layout({ children }) {
               </Typography>
             </Box>
           </Box>
-
-
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
@@ -150,16 +147,15 @@ export default function Layout({ children }) {
         </DrawerHeader>
         <Divider />
         <List>
-          {/* Mapeando os itens do menu dinamicamente */}
           {menuItems.map((item) => (
             <ListItem
               key={item.name}
               disablePadding
               sx={{ display: 'block' }}
-              onClick={() => handleMenuClick(item)} // Adiciona o clique para o item
+              onClick={() => handleMenuClick(item)}
             >
               <ListItemButton
-                component={item.action ? 'button' : Link} // Usa 'button' para logout, Link para navegação
+                component={item.action ? 'button' : Link}
                 to={item.path || '#'}
                 sx={{
                   minHeight: 48,
