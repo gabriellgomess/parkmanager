@@ -1,15 +1,15 @@
 import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { Box, Typography, TextField, Button, Backdrop, Card, CardContent, Tooltip } from '@mui/material';
+import { Box, Typography, TextField, Button, Backdrop, Card, CardContent, Tooltip, Snackbar, Alert } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import { DataGrid } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import dayjs from 'dayjs';
 import AuthContext from '../context/AuthContext'; // Importa o contexto
 
 const ValidacaoHiper = () => {
@@ -27,6 +27,16 @@ const ValidacaoHiper = () => {
   };
   const handleOpen = () => {
     setOpen(true);
+  };
+
+    // States for Snackbar
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+
+     // Close Snackbar
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   // Função para buscar dados com ou sem filtro de datas
@@ -141,21 +151,29 @@ const faixaDeValorNum = (tempodesc) => {
   // Função para aplicar o filtro
   const handleApplyFilter = () => {
     if (startDate && endDate && startDate > endDate) {
-      alert('Data Inicial não pode ser maior que Data Final');
+      setSnackbarMessage('Data Inicial não pode ser maior que Data Final');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
       return;
     }
-    // Verifica se algum filtro foi aplicado
-    if (!startDate && !endDate && !ticket && !placa) {
-      alert('Preencha ao menos um filtro');
+
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+
+    if (startDate && endDate && end.diff(start, 'day') > 30) {
+      setSnackbarMessage('O período de busca não pode exceder 30 dias.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
       return;
-    } 
+    }
+
     fetchData(
-        startDate ? `${startDate} 00:00:00` : '',
-        endDate ? `${endDate} 23:59:59` : '',
-        ticket,
-        placa
+      startDate ? `${startDate} 00:00:00` : '',
+      endDate ? `${endDate} 23:59:59` : '',
+      ticket,
+      placa
     );
-};
+  };
 
   // Função para limpar o filtro
   const handleClearFilter = () => {
@@ -288,17 +306,19 @@ const faixaDeValorNum = (tempodesc) => {
       </Typography>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, mb: 2 }}>        
-        <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'end', gap: '15px'}}>
+        <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
           <TextField
             label="Ticket"
             value={ticket}
             onChange={(e) => setTicket(e.target.value)}
+            sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
           <TextField
             label="Placa"
             value={placa}
             onChange={handlePlacaChange}
             error={placaError}
+            sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />        
           <TextField
             label="Data Inicial"
@@ -306,6 +326,7 @@ const faixaDeValorNum = (tempodesc) => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
           <TextField
             label="Data Final"
@@ -313,70 +334,75 @@ const faixaDeValorNum = (tempodesc) => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
-          <Tooltip arrow title="Aplicar Filtro">
-          <Button variant="contained" onClick={handleApplyFilter}>
-            <FilterAltIcon />
-          </Button>
-          </Tooltip>
-          <Tooltip arrow title="Limpar Filtro">
-          <Button variant="outlined" onClick={handleClearFilter}>
-            <FilterAltOffIcon />
-          </Button>
-          </Tooltip>
-          <Tooltip arrow title="Gerar Relatório">
-          <Button variant="contained" color="secondary" onClick={generatePDF}>
-            <TextSnippetIcon />
-          </Button>
-          </Tooltip>
+          <Box sx={{display: 'flex', gap: '10px'}}>
+             <Tooltip sx={{flexGrow: '1'}} arrow title="Aplicar Filtro">
+            <Button variant="contained" onClick={handleApplyFilter} >
+              <FilterAltIcon />
+            </Button>
+            </Tooltip>
+            <Tooltip sx={{flexGrow: '1'}} arrow title="Limpar Filtro">
+            <Button variant="outlined" onClick={handleClearFilter}>
+              <FilterAltOffIcon />
+            </Button>
+            </Tooltip>
+            <Tooltip sx={{flexGrow: '1'}} arrow title="Gerar Relatório">
+            <Button variant="contained" color="secondary" onClick={generatePDF}>
+              <TextSnippetIcon />
+            </Button>
+            </Tooltip>
+          </Box>
+         
         </Box>
-        <Box sx={{display: 'flex', gap: '15px', flexWrap: 'wrap'}}>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+        <Box sx={{display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
             <CardContent>
             <Typography variant='caption'>Total de Tickets</Typography>
-            <Typography variant='h5'>{averages.totalTickets}</Typography>
+            <Typography variant='h6'>{averages.totalTickets}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
             <CardContent>
             <Typography variant='caption'>Média de Permanência</Typography>
-            <Typography variant='h5'>{formatPermanencia(Math.ceil(averages.mediaPermanencia)) || 0}</Typography>
+            <Typography variant='h6'>{formatPermanencia(Math.ceil(averages.mediaPermanencia)) || 0}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
             <CardContent>
             <Typography variant='caption'>Média de Tempo Desc</Typography>
-            <Typography variant='h5'>{formatPermanencia(Math.ceil(averages.mediaTempodesc)) || 0}</Typography>
+            <Typography variant='h6'>{formatPermanencia(Math.ceil(averages.mediaTempodesc)) || 0}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
             <CardContent>
             <Typography variant='caption'>Média de Valor Desc</Typography>
-            <Typography variant='h5'>R$ {averages.mediaValordesc?.toFixed(2)}</Typography>
+            <Typography variant='h6'>R$ {averages.mediaValordesc?.toFixed(2)}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
             <CardContent>
-            <Typography variant='caption'>Média de Faixa de Valor</Typography>
-            <Typography variant='h5'>R$ {averages.mediaFaixaValor?.toFixed(2)}</Typography>
+            <Typography variant='caption'>Média de Valor</Typography>
+            <Typography variant='h6'>R$ {averages.mediaFaixaValor?.toFixed(2)}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
             <CardContent>
             <Typography variant='caption'>Terminal de Entrada Mais Utilizado</Typography>
-            <Typography variant='h5'>{averages.terminalEntradaMaisUtilizado || 'N/A'}</Typography>
+            <Typography variant='h6'>{averages.terminalEntradaMaisUtilizado || 'N/A'}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px'}}>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
             <CardContent>
             <Typography variant='caption'>Terminal de Saída Mais Utilizado</Typography>
-            <Typography variant='h5'>{averages.terminalSaidaMaisUtilizado || 'N/A'}</Typography>
+            <Typography variant='h6'>{averages.terminalSaidaMaisUtilizado || 'N/A'}</Typography>
             </CardContent>
           </Card>
         </Box>
       </Box>
 
       <DataGrid
+        sx={{display: {xs: 'none', sm: 'none', md: 'flex'}}}
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         rows={data.filter(row => row.ticket !== '100')}
         columns={columns}
@@ -393,6 +419,12 @@ const faixaDeValorNum = (tempodesc) => {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+       {/* Snackbar for messages */}
+       <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
 
     </Box>
   );

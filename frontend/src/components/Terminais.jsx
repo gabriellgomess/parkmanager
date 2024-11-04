@@ -77,7 +77,7 @@ const Terminais = () => {
                 terminais.map((terminal) => (
                     <Card key={terminal.idestacao} sx={{width: '300px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
                         <Box sx={{display: 'flex', alignItems: 'end', gap: '20px'}}>                            
-                            <img width={60} src={terminal.tipo === 8 ? IconEntrada : terminal.tipo === 10 ? IconSaida : IconCaixa} alt={terminal.tipo} />
+                            <img width={80} src={terminal.tipo === 8 ? IconEntrada : terminal.tipo === 10 ? IconSaida : IconCaixa} alt={terminal.tipo} />
                             <Typography variant='body1'>{terminal.descricao}</Typography>
                         </Box>                          
                         <Box sx={{display: 'flex', justifyContent: 'space-between'}}>

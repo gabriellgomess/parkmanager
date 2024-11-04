@@ -22,6 +22,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import menuItems from './MenuItems';
 import AuthContext from '../context/AuthContext';
 
+import Logo from '../assets/logo_lg_light.png';
+import LogoMobile from '../assets/logo_light.png';
+
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -123,9 +126,13 @@ export default function Layout({ children }) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            {config?.APP_NAME || 'Nome da Aplicação'} {/* Nome da aplicação do config */}
-          </Typography>
+          <Box sx={{display: {xs: 'none', sm: 'none', md: 'block'}}}>
+            <img src={Logo} alt="Logo" width={200} />
+          </Box>
+          <Box sx={{display: {xs: 'block', sm: 'block', md: 'none'}}}>
+            <img src={LogoMobile} alt="Logo" width={60} />
+          </Box>
+          
           <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Avatar alt={user?.name} src={`${config?.APP_URL}/storage/${user?.profile_photo}`} />
             <Box>

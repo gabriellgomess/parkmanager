@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { Box, Typography, TextField, Button, Tooltip, Backdrop, Card, CardContent } from '@mui/material';
+import { Box, Typography, TextField, Button, Tooltip, Backdrop, Card, CardContent, Snackbar, Alert } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { DataGrid } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
@@ -9,6 +9,7 @@ import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import dayjs from 'dayjs';
 import AuthContext from '../context/AuthContext';
 
 const EntradasSaidas = () => {
@@ -19,10 +20,21 @@ const EntradasSaidas = () => {
   const [placa, setPlaca] = useState('');
   const [open, setOpen] = useState(false);
   const [averages, setAverages] = useState({});
+  const [stats, setStats] = useState({});
   const { config } = useContext(AuthContext);
+
+  // States for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('error');
 
   const handleClose = () => setOpen(false);
   const handleOpen = () => setOpen(true);
+
+  // Close Snackbar
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const fetchData = (start = '', end = '', ticket = '', placa = '') => {
     handleOpen();
@@ -37,16 +49,15 @@ const EntradasSaidas = () => {
       headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       },
-  })
-  .then(response => {
+    })
+    .then(response => {
       handleClose();
       setData(response.data);
-  })
-  .catch(error => {
+    })
+    .catch(error => {
       handleClose();
       console.error("Erro ao buscar os dados:", error);
-  });
-  
+    });
   };
 
   useEffect(() => {
@@ -124,9 +135,22 @@ const EntradasSaidas = () => {
 
   const handleApplyFilter = () => {
     if (startDate && endDate && startDate > endDate) {
-      alert('Data Inicial não pode ser maior que Data Final');
+      setSnackbarMessage('Data Inicial não pode ser maior que Data Final');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
       return;
     }
+
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+
+    if (startDate && endDate && end.diff(start, 'day') > 30) {
+      setSnackbarMessage('O período de busca não pode exceder 30 dias.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
     fetchData(
       startDate ? `${startDate} 00:00:00` : '',
       endDate ? `${endDate} 23:59:59` : '',
@@ -154,43 +178,144 @@ const EntradasSaidas = () => {
     { field: 'etstickets_saiucomhiper', headerName: 'Saiu com Hiper', width: 150, renderCell: (params) => <span>{params.row.etstickets_saiucomhiper ? 'Sim' : 'Não'}</span> }
   ];
 
+  const calculateStatistics = (data) => {
+    const eteticketsDescCount = {};
+    const eteticketsOrigemCount = {};
+    const etsticketsDescCount = {};
+    let totalVehicles = data.length;
+    let vehiclesExited = 0;
+    let vehiclesWithPlate = 0;
+
+    data.forEach(row => {
+      // Contagem das descrições de entrada
+      eteticketsDescCount[row.etetickets_descricao] = (eteticketsDescCount[row.etetickets_descricao] || 0) + 1;
+      // Contagem das origens de acesso
+      eteticketsOrigemCount[row.etetickets_origemacesso] = (eteticketsOrigemCount[row.etetickets_origemacesso] || 0) + 1;
+      // Contagem das descrições de saída
+      if (row.etstickets_descricao) {
+        etsticketsDescCount[row.etstickets_descricao] = (etsticketsDescCount[row.etstickets_descricao] || 0) + 1;
+        vehiclesExited += 1;
+      }
+      // Contagem de veículos com placa registrada
+      if (row.etetickets_placa) {
+        vehiclesWithPlate += 1;
+      }
+    });
+
+    // Descrição mais utilizada
+    const mostUsedEteticketsDesc = Object.keys(eteticketsDescCount).reduce((a, b) => eteticketsDescCount[a] > eteticketsDescCount[b] ? a : b, '');
+    const mostUsedEteticketsOrigem = Object.keys(eteticketsOrigemCount).reduce((a, b) => eteticketsOrigemCount[a] > eteticketsOrigemCount[b] ? a : b, '');
+    const mostUsedEtsticketsDesc = Object.keys(etsticketsDescCount).reduce((a, b) => etsticketsDescCount[a] > etsticketsDescCount[b] ? a : b, '');
+
+    // Percentuais
+    const exitPercentage = ((vehiclesExited / totalVehicles) * 100).toFixed(2);
+    const platePercentage = ((vehiclesWithPlate / totalVehicles) * 100).toFixed(2);
+
+    return {
+      mostUsedEteticketsDesc,
+      mostUsedEteticketsOrigem,
+      mostUsedEtsticketsDesc,
+      exitPercentage,
+      platePercentage,
+    };
+  };
+
+  useEffect(() => {
+    if (data.length > 0) {
+      setStats(calculateStatistics(data));
+    }
+  }, [data]);
+
   return (
     <Box sx={{ height: 600, width: '100%' }}>
       <Typography variant="h6" align="center" gutterBottom>
         Entradas e Saídas
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'end', gap: '15px' }}>
-          <TextField label="Ticket" value={ticket} onChange={(e) => setTicket(e.target.value)} />
-          <TextField label="Placa" value={placa} onChange={(e) => setPlaca(e.target.value)} />
-          <TextField label="Data Inicial" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-          <TextField label="Data Final" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-          <Tooltip arrow title="Aplicar Filtro">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, mb: 2 }}>        
+        <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
+          <TextField label="Ticket" value={ticket} onChange={(e) => setTicket(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField label="Placa" value={placa} onChange={(e) => setPlaca(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField label="Data Inicial" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField label="Data Final" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <Box sx={{display: 'flex', gap: '10px'}}>
+          <Tooltip sx={{flexGrow: '1'}} arrow title="Aplicar Filtro">
             <Button variant="contained" onClick={handleApplyFilter}><FilterAltIcon /></Button>
           </Tooltip>
-          <Tooltip arrow title="Limpar Filtro">
+          <Tooltip sx={{flexGrow: '1'}} arrow title="Limpar Filtro">
             <Button variant="outlined" onClick={handleClearFilter}><FilterAltOffIcon /></Button>
           </Tooltip>
-          <Tooltip arrow title="Gerar Relatório">
+          <Tooltip sx={{flexGrow: '1'}} arrow title="Gerar Relatório">
             <Button variant="contained" color="secondary" onClick={generatePDF}><TextSnippetIcon /></Button>
           </Tooltip>
+          </Box>
         </Box>
-      </Box>
+      
 
+      <Box sx={{display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
+          <Card elevation={3} sx={{minWidth: '270px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Entrada mais utilizada</Typography>
+            <Typography variant='h6'>{stats.mostUsedEteticketsDesc || 'N/A'}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={3} sx={{minWidth: '270px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Saída mais utilizada</Typography>
+            <Typography variant='h6'>{stats.mostUsedEtsticketsDesc || 'N/A'}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Placas Capturadas</Typography>
+            <Typography variant='h6'>{stats.platePercentage || '0'}%</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Veículos que saíram</Typography>
+            <Typography variant='h6'>{stats.exitPercentage || '0'}%</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Total de Tickets</Typography>
+            <Typography variant='h6'>{averages.totalTickets || '0'}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+            <CardContent>
+            <Typography variant='caption'>Média de Permanência</Typography>
+            <Typography variant='h6'>{formatPermanencia(Math.ceil(averages.mediaPermanencia) || 0)}</Typography>
+            </CardContent>
+          </Card>
+          
+
+        </Box>
+        </Box>
+      
       <DataGrid
+        sx={{display: {xs: 'none', sm: 'none', md: 'flex'}}}
         localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         rows={data.filter(row => row.ticket !== '100')}
         columns={columns}
         pageSize={10}
-        rowsPerPageOptions={[10, 20, 50]}
+        rowsPerPageOptions={[10, 20, 50, data.length]}
         disableRowSelectionOnClick
         getRowId={(row) => row.etetickets_id}
       />
 
+
       <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={open} onClick={handleClose}>
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      {/* Snackbar for messages */}
+      <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
