@@ -38,8 +38,6 @@ class EntradasSaidasController extends Controller
                 'etetickets.setor as etetickets_setor',
                 'etetickets.origemacesso as etetickets_origemacesso',
                 'etetickets.comloopmotos as etetickets_comloopmotos',
-                'etetickets.id as etetickets_id',
-                'etetickets.versao as etetickets_versao',
                 'etstickets.ticket as etstickets_ticket',
                 'etstickets.data as etstickets_data',
                 'etstickets.placa as etstickets_placa',
@@ -50,8 +48,7 @@ class EntradasSaidasController extends Controller
                 'etstickets.permanencia as etstickets_permanencia',
                 'etstickets.saiucomhiper as etstickets_saiucomhiper',
                 'etstickets.setor as etstickets_setor',
-                'etstickets.origemacesso as etstickets_origemacesso',
-                'etstickets.id as etstickets_id'                
+                'etstickets.origemacesso as etstickets_origemacesso',               
             )
             ->orderBy('etetickets.data', 'desc');
     

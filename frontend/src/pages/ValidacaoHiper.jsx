@@ -90,28 +90,6 @@ const formatPermanencia = (minutos) => {
   return `${String(horas).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 };
 
-// Mapeamento de tempodesc para a faixa de valor
-const faixaDeValor = (tempodesc) => {
-  const ranges = {
-    60: "R$10,00",
-    120: "R$20,00",
-    180: "R$30,00",
-    240: "R$40,00",
-    300: "R$50,00",
-    360: "R$60,00",
-    420: "R$70,00",
-    480: "R$80,00",
-    540: "R$90,00",
-    600: "R$100,00",
-    660: "R$110,00",
-    720: "R$120,00",
-    780: "R$130,00",
-    840: "R$140,00",
-    900: "R$150,00"
-  };
-  return ranges[tempodesc] || "Valor fora do intervalo";
-};
-
 const faixaDeValorNum = (tempodesc) => {
   const ranges = {
     60: 10,
@@ -145,7 +123,7 @@ const faixaDeValorNum = (tempodesc) => {
     { field: 'permanencia', headerName: 'Permanência', width: 130, renderCell: (params) => <span>{formatPermanencia(params.row.permanencia)}</span> },
     { field: 'valordesc', headerName: 'Valor Desc', width: 100, renderCell: (params) => <span>R$ {params.row.valordesc},00</span> },
     { field: 'tempodesc', headerName: 'Tempo Desc', width: 100, renderCell: (params) => <span>{formatPermanencia(params.row.tempodesc)}</span>  },
-    { field: 'faixa_valor', headerName: 'Compras até', width: 150, renderCell: (params) => <span>{faixaDeValor(params.row.tempodesc)}</span> } 
+    { field: 'faixa_valor', headerName: 'Compras até', width: 150, renderCell: (params) => <span>{faixaDeValorNum(params.row.tempodesc)}</span> } 
   ];
 
   // Função para aplicar o filtro
@@ -222,7 +200,7 @@ const faixaDeValorNum = (tempodesc) => {
       formatPermanencia(row.permanencia),
       'R$ '+row.valordesc+',00' || 'N/A',
       formatPermanencia(row.tempodesc) || 'N/A',
-      faixaDeValor(row.tempodesc) // Adiciona a faixa de valor ao PDF
+      faixaDeValorNum(row.tempodesc) // Adiciona a faixa de valor ao PDF
     ]));
   
     // Adicionar a tabela principal abaixo da tabela de médias
@@ -409,7 +387,7 @@ const faixaDeValorNum = (tempodesc) => {
         pageSize={10}
         rowsPerPageOptions={[10, 20, 50]}
         disableRowSelectionOnClick
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.ticket}
       />  
 
       <Backdrop

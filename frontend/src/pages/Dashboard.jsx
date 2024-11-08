@@ -1,12 +1,15 @@
 // src/pages/Dashboard.jsx
 import React from 'react';
 import Terminais from '../components/Terminais';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 const Dashboard = () => {
   return (
     <Box>
-        <Terminais />
+        {/* <Terminais /> */}
+        <Typography variant="h4" component="h1" gutterBottom>
+          Dashboard
+        </Typography>
     </Box>
 
   );
