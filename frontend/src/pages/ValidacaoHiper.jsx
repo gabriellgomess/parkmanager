@@ -113,17 +113,17 @@ const faixaDeValorNum = (tempodesc) => {
 
   // Definindo as colunas para o DataGrid com renderCell
   const columns = [
-    { field: 'ticket', headerName: 'Ticket', width: 100 },
-    { field: 'placa', headerName: 'Placa', width: 100 },
-    { field: 'terminal_entrada', headerName: 'Entrada', width: 100 },             
-    { field: 'datahoraentrada', headerName: 'Data Entrada', width: 140, renderCell: (params) => <span>{formatData(params.row.datahoraentrada)}</span> },
-    { field: 'datahoravalidacao', headerName: 'Validação', width: 140, renderCell: (params) => <span>{formatData(params.row.datahoravalidacao)}</span> },
-    { field: 'terminal_saida', headerName: 'Saída', width: 100 }, 
-    { field: 'datahorasaida', headerName: 'Hora Saída', width: 140, renderCell: (params) => <span>{params.row.datahorasaida.split(' ')[1]}</span> },
-    { field: 'permanencia', headerName: 'Permanência', width: 130, renderCell: (params) => <span>{formatPermanencia(params.row.permanencia)}</span> },
-    { field: 'valordesc', headerName: 'Valor Desc', width: 100, renderCell: (params) => <span>R$ {params.row.valordesc},00</span> },
-    { field: 'tempodesc', headerName: 'Tempo Desc', width: 100, renderCell: (params) => <span>{formatPermanencia(params.row.tempodesc)}</span>  },
-    { field: 'faixa_valor', headerName: 'Compras até', width: 150, renderCell: (params) => <span>{faixaDeValorNum(params.row.tempodesc)}</span> } 
+    { field: 'ticket', headerName: 'Ticket', width: 100, sortable: false, filterable: false },
+    { field: 'placa', headerName: 'Placa', width: 100, sortable: false, filterable: false },
+    { field: 'terminal_entrada', headerName: 'Entrada', width: 100, sortable: false, filterable: false },             
+    { field: 'datahoraentrada', headerName: 'Data Entrada', width: 140, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.datahoraentrada)}</span> },
+    { field: 'datahoravalidacao', headerName: 'Validação', width: 140, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.datahoravalidacao)}</span> },
+    { field: 'terminal_saida', headerName: 'Saída', width: 100, sortable: false, filterable: false }, 
+    { field: 'datahorasaida', headerName: 'Hora Saída', width: 140, sortable: false, filterable: false, renderCell: (params) => <span>{params.row.datahorasaida.split(' ')[1]}</span> },
+    { field: 'permanencia', headerName: 'Permanência', width: 130, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.permanencia)}</span> },
+    { field: 'valordesc', headerName: 'Valor Desc', width: 100, sortable: false, filterable: false, renderCell: (params) => <span>R$ {params.row.valordesc},00</span> },
+    { field: 'tempodesc', headerName: 'Tempo Desc', width: 100, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.tempodesc)}</span>  },
+    { field: 'faixa_valor', headerName: 'Compras até', width: 150, sortable: false, filterable: false, renderCell: (params) => <span>{faixaDeValorNum(params.row.tempodesc)}</span> } 
   ];
 
   // Função para aplicar o filtro
@@ -249,10 +249,13 @@ const faixaDeValorNum = (tempodesc) => {
       mediaValordesc: totalValordesc / data.length,
       mediaFaixaValor: totalFaixaValor / data.length,
       terminalEntradaMaisUtilizado: mostFrequent(entradaCounts),
+      terminalEntradaCount: entradaCounts[mostFrequent(entradaCounts)],
       terminalSaidaMaisUtilizado: mostFrequent(saidaCounts),
+      terminalSaidaCount: saidaCounts[mostFrequent(saidaCounts)],
       totalTickets: totalTickets
     };
-  };   
+  };
+     
   
   
   // No seu useEffect, após fetchData, adicione:
@@ -278,7 +281,7 @@ const faixaDeValorNum = (tempodesc) => {
   
 
   return (
-    <Box sx={{ height: 600, width: '95%' }}>
+    <Box sx={{ height: 600, width: '100%' }}>
       <Typography variant="h6" align="center" gutterBottom>
         Validações Hiper
       </Typography>
@@ -334,46 +337,52 @@ const faixaDeValorNum = (tempodesc) => {
          
         </Box>
         <Box sx={{display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
             <Typography variant='caption'>Total de Tickets</Typography>
             <Typography variant='h6'>{averages.totalTickets}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
-            <Typography variant='caption'>Média de Permanência</Typography>
+            <Typography variant='caption'>Permanência média</Typography>
             <Typography variant='h6'>{formatPermanencia(Math.ceil(averages.mediaPermanencia)) || 0}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
-            <Typography variant='caption'>Média de Tempo Desc</Typography>
+            <Typography variant='caption'>Tempo médio desc</Typography>
             <Typography variant='h6'>{formatPermanencia(Math.ceil(averages.mediaTempodesc)) || 0}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
-            <Typography variant='caption'>Média de Valor Desc</Typography>
+            <Typography variant='caption'>Valor médio desc</Typography>
             <Typography variant='h6'>R$ {averages.mediaValordesc?.toFixed(2)}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '170px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
             <Typography variant='caption'>Média de Valor</Typography>
             <Typography variant='h6'>R$ {averages.mediaFaixaValor?.toFixed(2)}</Typography>
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
             <CardContent>
             <Typography variant='caption'>Terminal de Entrada Mais Utilizado</Typography>
             <Typography variant='h6'>{averages.terminalEntradaMaisUtilizado || 'N/A'}</Typography>
+            <Box sx={{display: 'flex', justifyContent: 'end'}}>
+              <Typography variant='caption'>{averages.terminalEntradaCount || 0} acessos</Typography>
+            </Box>            
             </CardContent>
           </Card>
-          <Card elevation={3} sx={{minWidth: '170px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
+          <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '270px'}}}>
             <CardContent>
             <Typography variant='caption'>Terminal de Saída Mais Utilizado</Typography>
             <Typography variant='h6'>{averages.terminalSaidaMaisUtilizado || 'N/A'}</Typography>
+            <Box sx={{display: 'flex', justifyContent: 'end'}}>
+              <Typography variant='caption'>{averages.terminalSaidaCount || 0} acessos</Typography>
+            </Box>
             </CardContent>
           </Card>
         </Box>
