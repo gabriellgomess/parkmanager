@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Dashboard from './pages/Dashboard';
 import EntradasSaidas from './pages/EntradasSaidas';
 import ValidacaoHiper from './pages/ValidacaoHiper';
+import Credenciados from './pages/Credenciados';
 import Users from './pages/Users';
 
 const App = () => {
@@ -55,6 +56,16 @@ const App = () => {
           <PrivateRoute>
             <Layout>
               <ValidacaoHiper />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/credenciados"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <Credenciados />
             </Layout>
           </PrivateRoute>
         }
