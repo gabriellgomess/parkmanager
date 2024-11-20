@@ -13,48 +13,48 @@ class CredenciadoAcessosController extends Controller
         $cartao = $request->input('cartao');
 
         // Usa o modelo CredenciadoAcessos e força a conexão 'pgsql' para a consulta
-        $query = CredenciadoAcessos::from('etetickets')
-        ->leftJoin('etstickets', function ($join) {
-            $join->on(DB::raw("COALESCE(SPLIT_PART(etstickets.ticket, ':', 2), etstickets.ticket)"), '=', 'etetickets.ticket')
-                 ->orOn('etetickets.placa', '=', 'etstickets.placa');
+        $query = CredenciadoAcessos::from('etetickets as t1')
+        ->leftJoin('etstickets as t2', function ($join) {
+            $join->on('t1.ticket', '=', DB::raw("SPLIT_PART(t2.ticket, ':', 2)"))
+                 ->on('t1.data', '=', 't2.dataentrada');
         })
-        
         ->select(
-            'etetickets.data as etetickets_id',
-            'etetickets.data as etetickets_data',
-            'etetickets.ticket as etetickets_ticket',
-            'etetickets.placa as etetickets_placa',
-            'etetickets.idterminal as etetickets_idterminal',
-            'etetickets.entrada as etetickets_entrada',
-            'etetickets.descricao as etetickets_descricao',
-            'etetickets.cancel as etetickets_cancel',
-            'etetickets.mensal as etetickets_mensal',
-            'etetickets.cartaodebito as etetickets_cartaodebito',
-            'etetickets.empresa as etetickets_empresa',
-            'etetickets.garagem as etetickets_garagem',
-            'etetickets.tipoveiculo as etetickets_tipoveiculo',
-            'etetickets.tiposervico as etetickets_tiposervico',
-            'etetickets.prisma as etetickets_prisma',
-            'etetickets.mensalista as etetickets_mensalista',
-            'etetickets.sequencia as etetickets_sequencia',
-            'etetickets.setor as etetickets_setor',
-            'etetickets.origemacesso as etetickets_origemacesso',
-            'etetickets.comloopmotos as etetickets_comloopmotos',
-            'etstickets.ticket as etstickets_ticket',
-            'etstickets.data as etstickets_data',
-            'etstickets.placa as etstickets_placa',
-            'etstickets.dataentrada as etstickets_dataentrada',
-            'etstickets.saida as etstickets_saida',
-            'etstickets.descricao as etstickets_descricao',
-            'etstickets.mensal as etstickets_mensal',
-            'etstickets.permanencia as etstickets_permanencia',
-            'etstickets.saiucomhiper as etstickets_saiucomhiper',
-            'etstickets.setor as etstickets_setor',
-            'etstickets.origemacesso as etstickets_origemacesso'
+            't1.data as etetickets_id',
+            't1.data as etetickets_data',
+            't1.ticket as etetickets_ticket',
+            't1.placa as etetickets_placa',
+            't1.idterminal as etetickets_idterminal',
+            't1.entrada as etetickets_entrada',
+            't1.descricao as etetickets_descricao',
+            't1.cancel as etetickets_cancel',
+            't1.mensal as etetickets_mensal',
+            't1.cartaodebito as etetickets_cartaodebito',
+            't1.empresa as etetickets_empresa',
+            't1.garagem as etetickets_garagem',
+            't1.tipoveiculo as etetickets_tipoveiculo',
+            't1.tiposervico as etetickets_tiposervico',
+            't1.prisma as etetickets_prisma',
+            't1.mensalista as etetickets_mensalista',
+            't1.sequencia as etetickets_sequencia',
+            't1.setor as etetickets_setor',
+            't1.origemacesso as etetickets_origemacesso',
+            't1.comloopmotos as etetickets_comloopmotos',
+            't2.ticket as etstickets_ticket',
+            't2.data as etstickets_data',
+            't2.placa as etstickets_placa',
+            't2.dataentrada as etstickets_dataentrada',
+            't2.saida as etstickets_saida',
+            't2.descricao as etstickets_descricao',
+            't2.mensal as etstickets_mensal',
+            't2.permanencia as etstickets_permanencia',
+            't2.saiucomhiper as etstickets_saiucomhiper',
+            't2.setor as etstickets_setor',
+            't2.origemacesso as etstickets_origemacesso'
         )
-        ->orderBy('etetickets.data', 'desc')
-        ->where('etetickets.ticket', $cartao)
-        ->where('etstickets.mensal', 'T');    
+        ->where('t1.mensal', 'T')
+        ->where('t1.ticket', $cartao)
+        ->orderBy('t1.entrada', 'desc');
+    
 
 
         $credenciadoAcessos = $query->get();
