@@ -22,6 +22,9 @@ const EntradasSaidas = () => {
   const [open, setOpen] = useState(false);
   const [averages, setAverages] = useState({});
   const [stats, setStats] = useState({});
+  const [veiculosNoPatio, setVeiculosNoPatio] = useState(false);
+  const [saidaHiper, setSaidaHiper] = useState(false);
+
   const [rangeHours, setRangeHours] = useState([0, 1440]);
   const { config } = useContext(AuthContext);
 
@@ -44,21 +47,20 @@ const EntradasSaidas = () => {
 
   const fetchData = (start = '', end = '', ticket = '', placa = '') => {
     handleOpen();
-    const params = {};
-    if (start) params.dataA = start;
-    if (end) params.dataB = end;
-    if (ticket) params.ticket = ticket;
-    if (placa) params.placa = placa;
-    if (rangeHours[0] !== 0 || rangeHours[1] !== 1440) {
-      params.permanenciaInicial = rangeHours[0];
-      params.permanenciaFinal = rangeHours[1];
-    }
-
-
+    const params = {
+      ...(start && { dataA: start }),
+      ...(end && { dataB: end }),
+      ...(ticket && { ticket }),
+      ...(placa && { placa }),
+      ...(rangeHours[0] !== 0 || rangeHours[1] !== 1440 && { permanenciaInicial: rangeHours[0], permanenciaFinal: rangeHours[1] }),
+      veiculosNoPatio,
+      saidaHiper,
+    };
+  
     axios.get(`${config.APP_URL}/api/entradas-saidas`, {
-      params: params,
+      params,
       headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
       },
     })
     .then(response => {
@@ -70,6 +72,7 @@ const EntradasSaidas = () => {
       console.error("Erro ao buscar os dados:", error);
     });
   };
+  
 
   useEffect(() => {
     fetchData();
@@ -336,9 +339,15 @@ const filterMessage = isFilterApplied()
            
           </Box>
           <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
-          <FormControlLabel control={<Checkbox defaultChecked />} label="Veículos no pátio" />
-            <FormControlLabel control={<Checkbox defaultChecked />} label="Saída Híper" />
-            <FormControlLabel control={<Checkbox defaultChecked />} label="Pagamento no caixa" />
+          <FormControlLabel 
+            control={<Checkbox checked={veiculosNoPatio} onChange={(e) => setVeiculosNoPatio(e.target.checked)} />} 
+            label="Veículos no pátio" 
+          />
+          <FormControlLabel 
+            control={<Checkbox checked={saidaHiper} onChange={(e) => setSaidaHiper(e.target.checked)} />} 
+            label="Saída Híper" 
+          />
+
           </Box>
           <Box sx={{display: 'flex', alignItems: 'end', width: '100%', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', paddingTop: '15px'}}>          
           

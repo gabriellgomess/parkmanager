@@ -19,7 +19,8 @@ class CredenciadosController extends Controller
             'ctrplaca.marca as p_marca',
             'ctrplaca.modelo as p_modelo',
             'ctrplaca.ano as p_ano',
-        );
+        )
+        ->orderBy('cartoes.cartao', 'asc');
         $credenciados = $query->get();
         return response()->json($credenciados);
     }

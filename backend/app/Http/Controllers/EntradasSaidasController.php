@@ -17,6 +17,8 @@ class EntradasSaidasController extends Controller
         $placa = $request->input('placa');
         $permanenciaInicial = $request->input('permanenciaInicial');
         $permanenciaFinal = $request->input('permanenciaFinal');
+        $veiculosNoPatio = $request->input('veiculosNoPatio');
+        $saidaHiper = $request->input('saidaHiper');
     
         // Define a tabela principal explicitamente
         $query = EntradasSaidas::from('etetickets')
@@ -55,35 +57,44 @@ class EntradasSaidasController extends Controller
             )
             ->orderBy('etetickets.data', 'desc');
     
-        // Aplica o filtro de data, se fornecido e se ticket ou placa não estão definidos
+        // Filtro por data
         if ($dataInicial && $dataFinal) {
             $query->whereBetween('etetickets.data', [$dataInicial, $dataFinal]);
         } else if (!$ticket && !$placa) {
-            // Aplica o filtro de 7 dias apenas quando não há filtros de ticket ou placa
             $query->whereBetween('etetickets.data', [now()->subDays(7), now()]);
         }
     
-        // Aplica o filtro de ticket, se fornecido
+        // Filtro por ticket
         if ($ticket) {
             $query->where('etetickets.ticket', $ticket);
         }
     
-        // Aplica o filtro de placa, se fornecido
+        // Filtro por placa
         if ($placa) {
             $query->where('etetickets.placa', $placa);
         }
     
-        // Aplica o filtro de permanência, se fornecido
+        // Filtro por permanência
         if ($permanenciaInicial !== null && $permanenciaFinal !== null) {
             $query->whereBetween('etstickets.permanencia', [$permanenciaInicial, $permanenciaFinal]);
         }
-        
+    
+        // Filtro de veículos no pátio
+        if ($veiculosNoPatio) {
+            $query->whereNull('etstickets.ticket'); // Tickets sem correspondência na tabela de saídas
+        }
+
+        // Saiu com hiper
+        if ($saidaHiper) {
+            $query->where('etstickets.saiucomhiper', 't');
+        }
     
         // Executa a consulta e retorna os resultados
         $entradasSaidas = $query->get();
     
         return response()->json($entradasSaidas);
     }
+    
     
     
     // Método para buscar um registro específico pelo id
