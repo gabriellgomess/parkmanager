@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { Box, Typography, TextField, Button, Tooltip, Backdrop, Card, CardContent, Snackbar, Alert, Slider, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -240,7 +240,7 @@ const EntradasSaidas = () => {
       if (row.etetickets_placa) {
         vehiclesWithPlate += 1;
       }
-      // Incrementa com base na saída com hiper ou não
+      // Incrementa com base na saída com hiper ou não      
       if (row.etstickets_saiucomhiper) {
         withHiper += 1;
       } else {

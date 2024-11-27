@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import EntradasSaidas from './pages/EntradasSaidas';
 import ValidacaoHiper from './pages/ValidacaoHiper';
 import Credenciados from './pages/Credenciados';
+import Pagamentos from './pages/Pagamentos';
 import Users from './pages/Users';
 
 const App = () => {
@@ -66,6 +67,16 @@ const App = () => {
           <PrivateRoute>
             <Layout>
               <Credenciados />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pagamentos"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <Pagamentos />
             </Layout>
           </PrivateRoute>
         }

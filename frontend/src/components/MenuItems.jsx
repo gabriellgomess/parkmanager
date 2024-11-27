@@ -5,6 +5,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import BadgeIcon from '@mui/icons-material/Badge';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 const MenuItems = [
@@ -27,6 +28,11 @@ const MenuItems = [
     name: 'Credenciados',
     path: '/credenciados',
     icon: <BadgeIcon />,
+  },
+  {
+    name: 'Pagamentos',
+    path: '/pagamentos',
+    icon: <AttachMoneyIcon />,
   },
   {
     name: 'Usuários',

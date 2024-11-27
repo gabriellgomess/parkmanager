@@ -10,6 +10,7 @@ use App\Http\Controllers\LogHiperController;
 use App\Http\Controllers\TerminaisController;
 use App\Http\Controllers\CredenciadosController;
 use App\Http\Controllers\CredenciadoAcessosController;
+use App\Http\Controllers\PagamentosController;
 
 // Rotas de Autenticação
 Route::post("register", [AuthController::class, "register"]);
@@ -37,6 +38,9 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 
     // Rotas de Credenciados Acessos
     Route::get("credenciado-acessos", [CredenciadoAcessosController::class, "index"]);
+
+    // Rotas de Pagamentos
+    Route::get("pagamentos", [PagamentosController::class, "index"]);
 });
 
 

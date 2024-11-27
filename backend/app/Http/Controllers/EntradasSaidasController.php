@@ -17,10 +17,9 @@ class EntradasSaidasController extends Controller
         $placa = $request->input('placa');
         $permanenciaInicial = $request->input('permanenciaInicial');
         $permanenciaFinal = $request->input('permanenciaFinal');
-        $veiculosNoPatio = $request->input('veiculosNoPatio');
-        $saidaHiper = $request->input('saidaHiper');
+        $veiculosNoPatio = filter_var($request->input('veiculosNoPatio'), FILTER_VALIDATE_BOOLEAN);
+        $saidaHiper = filter_var($request->input('saidaHiper'), FILTER_VALIDATE_BOOLEAN);
     
-        // Define a tabela principal explicitamente
         $query = EntradasSaidas::from('etetickets')
             ->leftJoin('etstickets', 'etetickets.ticket', '=', 'etstickets.ticket')
             ->select(
@@ -75,18 +74,18 @@ class EntradasSaidasController extends Controller
         }
     
         // Filtro por permanência
-        if ($permanenciaInicial !== null && $permanenciaFinal !== null) {
+        if ($permanenciaInicial !== null && $permanenciaFinal !== null && !$veiculosNoPatio) {
             $query->whereBetween('etstickets.permanencia', [$permanenciaInicial, $permanenciaFinal]);
         }
     
         // Filtro de veículos no pátio
         if ($veiculosNoPatio) {
-            $query->whereNull('etstickets.ticket'); // Tickets sem correspondência na tabela de saídas
-        }
-
-        // Saiu com hiper
-        if ($saidaHiper) {
-            $query->where('etstickets.saiucomhiper', 't');
+            $query->whereNull('etstickets.ticket');
+        } else {
+            // Filtro saiu com hiper (aplicado apenas quando veiculosNoPatio é falso)
+            if ($saidaHiper) {
+                $query->where('etstickets.saiucomhiper', true);
+            } 
         }
     
         // Executa a consulta e retorna os resultados
@@ -94,6 +93,8 @@ class EntradasSaidasController extends Controller
     
         return response()->json($entradasSaidas);
     }
+    
+    
     
     
     
