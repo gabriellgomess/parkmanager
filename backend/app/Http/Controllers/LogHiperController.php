@@ -14,6 +14,9 @@ class LogHiperController extends Controller
         $dataFinal = $request->input('dataB');
         $ticket = $request->input('ticket');
         $placa = $request->input('placa');
+        $validacaoA = $request->input('validacaoA');
+        $validacaoB = $request->input('validacaoB');
+        $order = $request->input('order');
 
         // Usa o modelo LogHiper e força a conexão 'pgsql' para a consulta
         $query = LogHiper::leftJoin('etetickets', 'log_hiper.ticket', '=', 'etetickets.ticket')
@@ -22,9 +25,10 @@ class LogHiperController extends Controller
             'log_hiper.*', 
             'etetickets.placa', 
             'etetickets.descricao as terminal_entrada', 
-            'etstickets.descricao as terminal_saida'
-        )
-        ->orderBy('log_hiper.data', 'desc');
+            'etstickets.descricao as terminal_saida',
+            'etstickets.origemacesso as origem_acesso_saida'
+        );
+        
 
         // Aplica o filtro de data, se fornecido e se ticket ou placa não estão definidos
         if ($dataInicial && $dataFinal) {
@@ -42,6 +46,16 @@ class LogHiperController extends Controller
         // Aplica o filtro de placa, se fornecido
         if ($placa) {
         $query->where('etetickets.placa', $placa);
+        }
+
+        // Aplica o filtro de validação, se fornecido
+        if ($validacaoA && $validacaoB) {
+        $query->whereBetween('log_hiper.datahoravalidacao', [$validacaoA, $validacaoB]);
+        }
+
+        // Aplica a ordenação, se fornecida
+        if ($order) {
+        $query->orderBy('log_hiper.datahoraentrada', $order);
         }
 
 

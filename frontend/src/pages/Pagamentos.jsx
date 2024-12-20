@@ -11,8 +11,19 @@ import {
   Alert,
   Backdrop,
   CircularProgress,
+  Accordion, 
+  AccordionSummary, 
+  AccordionDetails,
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { DataGrid } from '@mui/x-data-grid';
+import { ptBR } from '@mui/x-data-grid/locales';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import AuthContext from '../context/AuthContext';
@@ -21,8 +32,14 @@ const Pagamentos = () => {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [ticket, setTicket] = useState('');
+  const [placa, setPlaca] = useState('');
+  const [placaError, setPlacaError] = useState(false);
   const [open, setOpen] = useState(false);
   const [stats, setStats] = useState({});
+  const [status_pagamento, setStatusPagamento] = useState('todos');
+  const [desconto, setDesconto] = useState('todos');
+  const [order, setOrder] = useState('desc');
   const { config } = useContext(AuthContext);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -33,13 +50,37 @@ const Pagamentos = () => {
   const handleClose = () => setOpen(false);
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
+   // Função para validar a placa no padrão Brasil/Mercosul
+   const validatePlaca = (value) => {
+    const regex = /^[A-Z]{3}-\d{4}$|^[A-Z]{3}-\d{1}[A-Z]{1}\d{2}$/; // Regex para LLL-NNNN ou LLL-NLNN
+    return regex.test(value.toUpperCase());
+    };
+
+    // Atualiza o valor e valida a placa
+    const handlePlacaChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setPlaca(value);
+    setPlacaError(!validatePlaca(value) && value !== ''); // Erro se não for válida e não estiver vazia
+    };
+
   const fetchData = () => {
+
+    if (placaError) {
+      alert('Placa inválida, digite no formato LLL-NNNN ou LLL-NLNN');
+      return;
+    }
+
     handleOpen();
     axios
       .get(`${config.APP_URL}/api/pagamentos`, {
         params: {
           ...(startDate && { startDate }),
           ...(endDate && { endDate }),
+          ...(ticket && { ticket }),
+          ...(placa && { placa }),
+          ...(status_pagamento == 'todos' ? { status_pagamento: null } : { status_pagamento }),
+          ...(desconto == 'todos' ? { desconto: null } : { desconto }),
+          ...(order && { order }),
         },
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -49,6 +90,7 @@ const Pagamentos = () => {
         handleClose();
         setData(response.data);
         calculateStats(response.data);
+
       })
       .catch((error) => {
         handleClose();
@@ -164,32 +206,39 @@ const Pagamentos = () => {
   };
 
   const columns = [
-    { field: 'ticket', headerName: 'Ticket', width: 120 },
-    { field: 'placa', headerName: 'Placa', width: 120 },
-    { field: 'datahoraentrada', headerName: 'Entrada', width: 200, renderCell: (params) => formatDate(params.value)},
-    { field: 'datahorasaida', headerName: 'Saída', width: 200, renderCell: (params) => formatDate(params.value)},    
+    { field: 'ticket', headerName: 'Ticket', width: 120, sortable: false, filterable: false },
+    { field: 'placa', headerName: 'Placa', width: 120, sortable: false, filterable: false },
+    { field: 'datahoraentrada', headerName: 'Entrada', width: 200, sortable: false, filterable: false, renderCell: (params) => formatDate(params.value)},
+    { field: 'datahorasaida', headerName: 'Saída', width: 200, sortable: false, filterable: false, renderCell: (params) => formatDate(params.value)},    
     {
         field: 'valorpago',
         headerName: 'Valor Pago',
         width: 150,
+        sortable: false, filterable: false,
         renderCell: (params) => parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     },
     {
         field: 'valorrecebido',
         headerName: 'Valor Recebido',
         width: 150,
+        sortable: false, filterable: false,
         renderCell: (params) => parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     },
     { 
         field: 'desconto', 
         headerName: 'Desconto', 
         width: 100 ,
+        sortable: false, filterable: false,
         renderCell: (params) => parseFloat(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     },
-    { field: 'descformadepagamento', headerName: 'Forma de Pagamento', width: 250 },    
-    { field: 'nometarifa', headerName: 'Tarifa', width: 150 },    
-    { field: 'operador', headerName: 'Operador', width: 150 },
+    { field: 'descformadepagamento', headerName: 'Forma de Pagamento', width: 250, sortable: false, filterable: false },    
+    { field: 'nometarifa', headerName: 'Tarifa', width: 150, sortable: false, filterable: false },    
+    { field: 'operador', headerName: 'Operador', width: 150, sortable: false, filterable: false },
   ];
+
+  const handleClearFilter = () => {
+    window.location.reload();
+  }
   
 
   return (
@@ -198,34 +247,102 @@ const Pagamentos = () => {
         Pagamentos
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
-          label="Data Inicial"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <TextField
-          label="Data Final"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <Button variant="contained" onClick={fetchData}>
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1-content"
+          id="panel1-header"
+        >
+          <Typography sx={{display: 'flex', alignItems: 'center', gap: '15px'}}>Filtros <FilterAltIcon /></Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+        <Box sx={{ gap: 2, mb: 2 }}>
+          <Box sx={{display: 'flex', gap: '15px'}}>
+            <TextField              
+              label="Ticket"
+              type="text"
+              value={ticket}
+              onChange={(e) => setTicket(e.target.value)}
+            />
+             <TextField              
+              label="Placa"
+              type="text"
+              value={placa}
+              error={placaError}
+              onChange={handlePlacaChange}
+            />
+            <TextField              
+              label="Data Inicial"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField              
+              label="Data Final"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormControl sx={{ width: '250px' }}>
+                <InputLabel>Modalidade</InputLabel>
+                <Select
+                value={status_pagamento}
+                onChange={(e) => setStatusPagamento(e.target.value)}
+                label="Modalidade"
+                >
+                <MenuItem value="todos">Todos</MenuItem>
+                <MenuItem value="pago">Pago</MenuItem>
+                <MenuItem value="abonado">Abonado</MenuItem>
+                </Select>
+            </FormControl>
+            <FormControl sx={{ width: '250px' }}>
+                <InputLabel>Desconto</InputLabel>
+                <Select
+                value={desconto}
+                onChange={(e) => setDesconto(e.target.value)}
+                label="Desconto"
+                >
+                <MenuItem value="todos">Todos</MenuItem>
+                <MenuItem value="true">Sim</MenuItem>
+                <MenuItem value="false">Não</MenuItem>
+                </Select>
+            </FormControl>
+            <FormControl sx={{ width: '320px' }}>
+                <InputLabel>Ordenar por data de entrada</InputLabel>
+                <Select
+                value={order}
+                onChange={(e) => setOrder(e.target.value)}
+                label="Ordenar por data de entrada"
+                >
+                <MenuItem value="asc">Do mais antigo para o mais recente</MenuItem>
+                <MenuItem value="desc">Do mais recente para o mais antigo</MenuItem>
+                </Select>
+            </FormControl>
+          </Box>
+        
+        <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap', paddingTop: '15px'}}>
+          <Button variant="contained" onClick={fetchData} startIcon={<FilterAltIcon />}>
           Filtrar
         </Button>
-        <Button variant="contained" color="secondary" onClick={generatePDF}>
+        <Button variant="outlined" onClick={handleClearFilter} startIcon={<FilterAltIcon />}>
+          Limpar
+        </Button>
+        <Button variant="contained" color="secondary" onClick={generatePDF} startIcon={<TextSnippetIcon />}>
           Gerar Relatório
         </Button>
+        </Box>
+        
       </Box>
+        </AccordionDetails>
+      </Accordion>      
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 4 }}>
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography variant="h6">Total Registros</Typography>
-            <Typography>{stats.totalRecords || 0}</Typography>
+            <Typography>{(stats.totalRecords || 0).toLocaleString('pt-BR')}</Typography>
           </CardContent>
         </Card>
         <Card sx={{ minWidth: 200 }}>
@@ -254,10 +371,10 @@ const Pagamentos = () => {
         </Card>
         <Card sx={{ minWidth: 200 }}>
             <CardContent>
-            <Typography variant="h6">Forma de Pagamento Mais Usada</Typography>
+            <Typography variant="h6">Forma Pgto Mais Usada</Typography>
             <Typography>{stats.mostUsedPaymentMethod || 'Desconhecido'}</Typography>
             <Typography>
-                {stats.mostUsedPaymentMethodCount || 0} ({stats.mostUsedPaymentMethodPercentage || '0.00'}%)
+                {(stats.mostUsedPaymentMethodCount || 0).toLocaleString('pt-BR')} ({stats.mostUsedPaymentMethodPercentage || '0.00'}%)
             </Typography>
             </CardContent>
         </Card>
@@ -266,6 +383,7 @@ const Pagamentos = () => {
       <DataGrid
         rows={data}
         columns={columns}
+        localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
         pageSize={10}
         rowsPerPageOptions={[10, 20, 50]}
         getRowId={(row) => row.ticket}

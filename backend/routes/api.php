@@ -11,6 +11,7 @@ use App\Http\Controllers\TerminaisController;
 use App\Http\Controllers\CredenciadosController;
 use App\Http\Controllers\CredenciadoAcessosController;
 use App\Http\Controllers\PagamentosController;
+use App\Http\Controllers\LotController;
 
 // Rotas de Autenticação
 Route::post("register", [AuthController::class, "register"]);
@@ -41,6 +42,10 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 
     // Rotas de Pagamentos
     Route::get("pagamentos", [PagamentosController::class, "index"]);
+
+    // Rota para contagem de patio
+    Route::get('patio', [LotController::class, 'countLots']);
+    
 });
 
 

@@ -333,19 +333,24 @@ const Users = () => {
               onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
             />
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Nível de Acesso</InputLabel>
-              <Select
-                value={formData.nivel_acesso}
-                onChange={(e) => setFormData({ ...formData, nivel_acesso: e.target.value })}
-              >
-                <MenuItem value={1}>Nível 1</MenuItem>
-                <MenuItem value={2}>Nível 2</MenuItem>
-                <MenuItem value={3}>Nível 3</MenuItem>
-                <MenuItem value={4}>Nível 4</MenuItem>
-                <MenuItem value={5}>Nível 5</MenuItem>
-              </Select>
-            </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="nivel_acesso">Nível de Acesso</InputLabel>
+            <Select
+              labelId="nivel_acesso"
+              value={formData.nivel_acesso}
+              onChange={(e) =>
+                setFormData({ ...formData, nivel_acesso: e.target.value })
+              }
+              label="Nível de Acesso"  // Correto
+            >
+              <MenuItem value={1}>Nível 1</MenuItem>
+              <MenuItem value={2}>Nível 2</MenuItem>
+              <MenuItem value={3}>Nível 3</MenuItem>
+              <MenuItem value={4}>Nível 4</MenuItem>
+              <MenuItem value={5}>Nível 5</MenuItem>
+            </Select>
+          </FormControl>
+
           </Box>
 
           <Box sx={{ display: 'flex', gap: '20px', alignItems: 'center' }}>

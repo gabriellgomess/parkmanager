@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.setItem('token', token);
       setAuthToken(token);
       getUser();
-      navigate('/dashboard');
+      // navigate('/dashboard');
+      navigate('/entradas-saidas');
     } catch (err) {
       setError('Erro ao fazer login');
     } finally {

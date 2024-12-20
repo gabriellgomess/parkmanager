@@ -72,13 +72,14 @@ const Terminais = () => {
     };
 
     return (
-        <Box sx={{display: 'flex', gap: '15px', flexWrap: 'wrap'}}>
+        <Box sx={{display: 'flex', gap: '15px', flexWrap: 'wrap', width: '100%'}}>
             {
                 terminais.map((terminal) => (
-                    <Card key={terminal.idestacao} sx={{width: '300px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <>
+                    <Card key={terminal.idestacao} sx={{width: '230px', padding: '10px', display: {xs:'none', sm: 'none', md: 'none', lg: 'none', xl: 'flex'}, flexDirection: 'column', gap: '10px'}}>
                         <Box sx={{display: 'flex', alignItems: 'end', gap: '20px'}}>                            
-                            <img width={80} src={terminal.tipo === 8 ? IconEntrada : terminal.tipo === 10 ? IconSaida : IconCaixa} alt={terminal.tipo} />
-                            <Typography variant='body1'>{terminal.descricao}</Typography>
+                            <img width={60} src={terminal.tipo === 8 ? IconEntrada : terminal.tipo === 10 ? IconSaida : IconCaixa} alt={terminal.tipo} />
+                            <Typography variant='body2'>{terminal.descricao}</Typography>
                         </Box>                          
                         <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
                             <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -100,6 +101,30 @@ const Terminais = () => {
                             <Typography variant='caption' sx={{lineHeight: '7px'}}>Versão: {formatVersion(terminal.versaoparkingplus)}</Typography>
                         }                        
                     </Card>
+                    <Card key={terminal.upsince} sx={{width: '100%', padding: '10px', display: {xs:'flex', sm: 'flex', md: 'flex', lg: 'flex', xl: 'none'}, justifyContent: 'space-between', gap: '10px'}}>
+                        <Box sx={{display: 'flex', alignItems: 'end', gap: '20px'}}>
+                            <img width={40} src={terminal.tipo === 8 ? IconEntrada : terminal.tipo === 10 ? IconSaida : IconCaixa} alt={terminal.tipo} />
+                            <Typography variant='body2'>{terminal.descricao}</Typography>
+                        </Box>
+                        <Box sx={{display: 'flex', gap: '10px'}}>
+                           <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                                <Typography variant='body2' >Tipo: {terminal.tipo === 8 ? 'Entrada' : terminal.tipo === 10 ? 'Saída' : 'Caixa'}</Typography>
+                                <Typography variant='body2' sx={{color: terminal.status === 'online' ? 'green' : 'tomato'}}>Status: {terminal.status}</Typography>
+                            </Box>
+                            <Box>
+                                {(terminal.tipo === 8 || terminal.tipo === 10) ?
+                                    <Button size='small' variant="outlined" endIcon={<CenterFocusWeakIcon />} onClick={() => handleOpen(terminal.enderecoip)}>
+                                        LPR
+                                    </Button>
+                                    :
+                                    <Box sx={{width: '70px'}}></Box>
+                                }
+                            </Box> 
+                        </Box>
+                                            
+                    </Card>
+                    </>
+                    
                 ))
             }
             <Modal

@@ -14,12 +14,13 @@ class EntradasSaidasController extends Controller
         $dataInicial = $request->input('dataA');
         $dataFinal = $request->input('dataB');
         $ticket = $request->input('ticket');
-        $placa = $request->input('placa');
+        $placa = $request->input('placa');        
         $permanenciaInicial = $request->input('permanenciaInicial');
         $permanenciaFinal = $request->input('permanenciaFinal');
         $veiculosNoPatio = filter_var($request->input('veiculosNoPatio'), FILTER_VALIDATE_BOOLEAN);
         $saidaHiper = filter_var($request->input('saidaHiper'), FILTER_VALIDATE_BOOLEAN);
-    
+        $order = $request->input('order');
+
         $query = EntradasSaidas::from('etetickets')
             ->leftJoin('etstickets', 'etetickets.ticket', '=', 'etstickets.ticket')
             ->select(
@@ -53,51 +54,66 @@ class EntradasSaidasController extends Controller
                 'etstickets.saiucomhiper as etstickets_saiucomhiper',
                 'etstickets.setor as etstickets_setor',
                 'etstickets.origemacesso as etstickets_origemacesso'
-            )
-            ->orderBy('etetickets.data', 'desc');
-    
+            );            
+
         // Filtro por data
         if ($dataInicial && $dataFinal) {
             $query->whereBetween('etetickets.data', [$dataInicial, $dataFinal]);
-        } else if (!$ticket && !$placa) {
+        } else if (!$ticket && !$placa && !$permanenciaInicial && !$permanenciaFinal && !$veiculosNoPatio) {
             $query->whereBetween('etetickets.data', [now()->subDays(7), now()]);
         }
-    
+
         // Filtro por ticket
         if ($ticket) {
             $query->where('etetickets.ticket', $ticket);
         }
-    
+
         // Filtro por placa
         if ($placa) {
             $query->where('etetickets.placa', $placa);
         }
-    
+
         // Filtro por permanência
         if ($permanenciaInicial !== null && $permanenciaFinal !== null && !$veiculosNoPatio) {
             $query->whereBetween('etstickets.permanencia', [$permanenciaInicial, $permanenciaFinal]);
+            if (!$dataInicial && !$dataFinal) {
+                $query->whereBetween('etetickets.data', [now()->subDays(31), now()]);
+            }
         }
-    
+
         // Filtro de veículos no pátio
         if ($veiculosNoPatio) {
             $query->whereNull('etstickets.ticket');
+            if (!$dataInicial && !$dataFinal) {
+                $query->whereBetween('etetickets.data', [now()->subDays(31), now()]);
+            }
         } else {
             // Filtro saiu com hiper (aplicado apenas quando veiculosNoPatio é falso)
             if ($saidaHiper) {
                 $query->where('etstickets.saiucomhiper', true);
-            } 
+                if (!$dataInicial && !$dataFinal) {
+                    $query->whereBetween('etetickets.data', [now()->subDays(31), now()]);
+                }
+            }
         }
-    
+
+        // Ordenação
+        if ($order) {
+            $query->orderBy('etetickets.data', $order);
+        } else {
+            $query->orderBy('etetickets.data', 'desc');
+        }
+
         // Executa a consulta e retorna os resultados
         $entradasSaidas = $query->get();
-    
+
         return response()->json($entradasSaidas);
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     // Método para buscar um registro específico pelo id
     public function show($id)
     {

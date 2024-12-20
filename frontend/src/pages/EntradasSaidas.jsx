@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { Box, Typography, TextField, Button, Tooltip, Backdrop, Card, CardContent, Snackbar, Alert, Slider, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox } from '@mui/material';
+import { Box, Typography, TextField, Button, Tooltip, Backdrop, Card, CardContent, Snackbar, Alert, Slider, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Checkbox, Popover, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { DataGrid } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
@@ -8,6 +8,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InfoIcon from '@mui/icons-material/Info';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import dayjs from 'dayjs';
@@ -24,6 +25,7 @@ const EntradasSaidas = () => {
   const [stats, setStats] = useState({});
   const [veiculosNoPatio, setVeiculosNoPatio] = useState(false);
   const [saidaHiper, setSaidaHiper] = useState(false);
+  const [order, setOrder] = useState('desc');
 
   const [rangeHours, setRangeHours] = useState([0, 1440]);
   const { config } = useContext(AuthContext);
@@ -32,6 +34,18 @@ const EntradasSaidas = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handlePopoverOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  const openPopover = Boolean(anchorEl);
 
   const handleClose = () => setOpen(false);
   const handleOpen = () => setOpen(true);
@@ -45,13 +59,14 @@ const EntradasSaidas = () => {
     setRangeHours(newValue);
   }
 
-  const fetchData = (start = '', end = '', ticket = '', placa = '') => {
+  const fetchData = (start = '', end = '', ticket = '', placa = '', order = '') => {
     handleOpen();
     const params = {
       ...(start && { dataA: start }),
       ...(end && { dataB: end }),
       ...(ticket && { ticket }),
       ...(placa && { placa }),
+      ...(order && { order }),
       ...(rangeHours[0] !== 0 || rangeHours[1] !== 1440 && { permanenciaInicial: rangeHours[0], permanenciaFinal: rangeHours[1] }),
       veiculosNoPatio,
       saidaHiper,
@@ -169,8 +184,8 @@ const EntradasSaidas = () => {
     const start = dayjs(startDate);
     const end = dayjs(endDate);
 
-    if (startDate && endDate && end.diff(start, 'day') > 30) {
-      setSnackbarMessage('O período de busca não pode exceder 30 dias.');
+    if (startDate && endDate && end.diff(start, 'day') > 31) {
+      setSnackbarMessage('O período de busca não pode exceder 31 dias.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       return;
@@ -188,6 +203,7 @@ const EntradasSaidas = () => {
       endDate ? `${endDate} 23:59:59` : '',
       ticket,
       placa,
+      order,
       rangeHours[0],
       rangeHours[1]
 
@@ -293,7 +309,11 @@ const isFilterApplied = () => {
 const filterMessage = isFilterApplied()
   ? `Dados referente a ${startDate ? `Data Inicial: ${startDate.split('-').reverse().join('/')} ` : ''}${endDate ? `Data Final: ${endDate.split('-').reverse().join('/')} ` : ''}${ticket ? `Ticket: ${ticket} ` : ''}${placa ? `Placa: ${placa} ` : ''}${rangeHours[0] !== 0 || rangeHours[1] !== 1440 ? `Permanência entre ${formatTime(rangeHours[0])} - ${formatTime(rangeHours[1])}` : ''}`
   : "Dados referente aos últimos 7 dias";
-
+const textTooltip = () => {
+  return(
+    <h3>Teste texto h3</h3>
+  )
+}
 
 
   return (
@@ -310,13 +330,14 @@ const filterMessage = isFilterApplied()
           id="panel1-header"
         >
           <Typography sx={{display: 'flex', alignItems: 'center', gap: '15px'}}>Filtros <FilterAltIcon /></Typography>
+          
         </AccordionSummary>
         <AccordionDetails>
            <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
-          <TextField size="small" label="Ticket" value={ticket} onChange={(e) => setTicket(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
-          <TextField size="small" label="Placa" value={placa} onChange={(e) => setPlaca(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
-          <TextField size="small" label="Data Inicial" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
-          <TextField size="small" label="Data Final" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField  label="Ticket" value={ticket} onChange={(e) => setTicket(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField  label="Placa" value={placa} onChange={(e) => setPlaca(e.target.value)} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField  label="Data Inicial" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
+          <TextField  label="Data Final" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} sx={{width: {xs: '100%', sm: '100%', md: '170px'}}} />
           <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'start', marginLeft: '20px'}}>
               <Typography variant="caption">Tempo de permanência: {formatTime(rangeHours[0])} - {formatTime(rangeHours[1])}</Typography>
             <Slider
@@ -336,7 +357,17 @@ const filterMessage = isFilterApplied()
               sx={{width: {xs: '100%', sm: '100%', md: '300px'}, marginBottom: {xs: '15px', sm: '15px', md: '-3px'}}}
             />
             </Box>
-           
+            <FormControl sx={{ width: '280px' }} margin="normal">
+            <InputLabel>Ordenar por data de entrada</InputLabel>
+            <Select
+              value={order}
+              onChange={(e) => setOrder(e.target.value)}
+              label="Ordenar por data de entrada"
+            >
+              <MenuItem value="asc">Do mais antigo para o mais recente</MenuItem>
+              <MenuItem value="desc">Do mais recente para o mais antigo</MenuItem>
+            </Select>
+          </FormControl>
           </Box>
           <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
           <FormControlLabel 
@@ -349,28 +380,60 @@ const filterMessage = isFilterApplied()
           />
 
           </Box>
-          <Box sx={{display: 'flex', alignItems: 'end', width: '100%', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', paddingTop: '15px'}}>          
+          <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap', paddingTop: '15px'}}>          
           
             <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Aplicar Filtro">
-              <Button size="small" variant="contained" onClick={handleApplyFilter} startIcon={<FilterAltIcon />}>Filtrar</Button>
+              <Button variant="contained" onClick={handleApplyFilter} startIcon={<FilterAltIcon />}>Filtrar</Button>
             </Tooltip>
             <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Limpar Filtro">
-              <Button size="small" variant="outlined" onClick={handleClearFilter} startIcon={<FilterAltOffIcon />}>Limpar</Button>
+              <Button variant="outlined" onClick={handleClearFilter} startIcon={<FilterAltOffIcon />}>Limpar</Button>
             </Tooltip>
             <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Gerar Relatório">
-              <Button size="small" variant="contained" color="secondary" onClick={generatePDF} startIcon={<TextSnippetIcon />}>Gerar Relatório</Button>
+              <Button variant="contained" color="secondary" onClick={generatePDF} startIcon={<TextSnippetIcon />}>Relatório</Button>
             </Tooltip>
           
         </Box>
         </AccordionDetails>
       </Accordion>        
       
-      <Box sx={{width: '100%'}}>
-        <Typography variant='body1'>{filterMessage}</Typography>
+      <Box sx={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <Typography variant='body1'>{filterMessage}</Typography>        
+        <InfoIcon 
+          color='info'
+          onMouseEnter={handlePopoverOpen}
+          onMouseLeave={handlePopoverClose}
+          aria-owns={open ? 'mouse-over-popover' : undefined}
+          aria-haspopup="true"
+          sx={{cursor: 'pointer', marginRight: '30px'}}
+
+        />
+        <Popover
+              id="mouse-over-popover"
+              sx={{ pointerEvents: 'none' }}
+              open={openPopover}
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+              }}
+              onClose={handlePopoverClose}
+              disableRestoreFocus
+            >
+              <Box sx={{maxWidth: '400px', padding: '15px'}}>
+                <Typography><span style={{fontWeight: 'bold'}}>Carregamento Inicial: </span>Mostra dados dos últimos 7 dias automaticamente.</Typography>
+                <Typography><span style={{fontWeight: 'bold'}}>Busca por Ticket ou Placa: </span>Mostra o resultado independente da data.</Typography>
+                <Typography><span style={{fontWeight: 'bold'}}>Busca por Tempo de Permanência, Veículos no Pátio ou Saída Hiper: </span>Mostra dados dos últimos 31 dias, caso seja informada uma data inicial e final, será respeitado o período informado (máximo de 31 dias).</Typography>
+              </Box>              
+          </Popover>     
+        
       </Box>
 
 
-      <Box sx={{display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
+      <Box sx={{display: 'flex', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
           <Card elevation={3} sx={{width:{xs: '100%', sm: '100%', md: 'fit-content'}}}>
             <CardContent>
             <Typography variant='caption'>Entrada mais utilizada</Typography>

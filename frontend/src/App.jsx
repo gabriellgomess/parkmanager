@@ -15,7 +15,7 @@ import Users from './pages/Users';
 const App = () => {
   useEffect(() => {
     // Modifica o título da página utilizando a variável de ambiente
-    document.title = import.meta.env.VITE_APP_TITLE || 'Sistama';
+    document.title = import.meta.env.VITE_APP_TITLE || 'Sistema';
   }, []);
   return (
     <AuthProvider>

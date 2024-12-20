@@ -1,16 +1,18 @@
 import { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import { Box, Typography, TextField, Button, Backdrop, Card, CardContent, Tooltip, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Backdrop, Card, CardContent, Tooltip, Snackbar, Alert, Accordion, AccordionSummary, AccordionDetails, Select, FormControl, InputLabel, MenuItem } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid } from '@mui/x-data-grid';
 import { ptBR } from '@mui/x-data-grid/locales';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import dayjs from 'dayjs';
 import AuthContext from '../context/AuthContext'; // Importa o contexto
+
 
 const ValidacaoHiper = () => {
   const { config } = useContext(AuthContext);
@@ -19,6 +21,9 @@ const ValidacaoHiper = () => {
   const [endDate, setEndDate] = useState('');
   const [ticket, setTicket] = useState('');
   const [placa, setPlaca] = useState('');
+  const [validacaoStart, setValidacaoStart] = useState('');
+  const [validacaoEnd, setValidacaoEnd] = useState('');
+  const [order, setOrder] = useState('');
   const [placaError, setPlacaError] = useState(false);
   const [averages, setAverages] = useState({});
   const [open, setOpen] = useState(false);
@@ -40,34 +45,42 @@ const ValidacaoHiper = () => {
   };
 
   // Função para buscar dados com ou sem filtro de datas
-  const fetchData = (start = '', end = '', ticket = '', placa = '') => {
+  const fetchData = (start = '', end = '', ticket = '', placa = '', validacaoStart = '', validacaoEnd = '', order = '') => {
     if (placaError) {
       alert('Placa inválida, digite no formato LLL-NNNN ou LLL-NLNN');
       return;
     }
+  
     handleOpen();
-    // Monta os parâmetros da requisição apenas com os valores preenchidos
     const params = {};
-    if (start) params.dataA = start;
-    if (end) params.dataB = end;
+  
+    // Adicione ao objeto `params` somente se o valor for válido
+    if (start && !isNaN(new Date(start))) params.dataA = start;
+    if (end && !isNaN(new Date(end))) params.dataB = end;
     if (ticket) params.ticket = ticket;
     if (placa) params.placa = placa;
-
-    axios.get(`${config.APP_URL}/api/hiper`, {
+    if (validacaoStart && !isNaN(new Date(validacaoStart))) params.validacaoA = validacaoStart;
+    if (validacaoEnd && !isNaN(new Date(validacaoEnd))) params.validacaoB = validacaoEnd;
+    if (order) params.order = order;
+  
+    axios
+      .get(`${config.APP_URL}/api/hiper`, {
         params,
         headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-        }
-    })
-        .then((response) => {
-            handleClose();
-            setData(response.data);
-        })
-        .catch((error) => {
-            handleClose();
-            console.error("Erro ao buscar os dados:", error);
-        });
-};
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        },
+      })
+      .then((response) => {
+        handleClose();
+        setData(response.data);
+      })
+      .catch((error) => {
+        handleClose();
+        console.error('Erro ao buscar os dados:', error);
+      });
+  };
+  
+  
 
   // Chamada inicial para buscar todos os dados
   useEffect(() => {
@@ -89,6 +102,14 @@ const formatPermanencia = (minutos) => {
   const mins = minutos % 60;
   return `${String(horas).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 };
+
+const formatOrigemAcesso = (origem) => {
+  if ( origem === 'TICKETLESS' || origem === 'PLACA LPR') return 'Placa LPR';
+  if ( origem === 'CARTAO TAG') return 'Ticket';
+}
+
+
+
 
 const faixaDeValorNum = (tempodesc) => {
   const ranges = {
@@ -121,6 +142,7 @@ const faixaDeValorNum = (tempodesc) => {
     { field: 'terminal_saida', headerName: 'Saída', width: 100, sortable: false, filterable: false }, 
     { field: 'datahorasaida', headerName: 'Hora Saída', width: 140, sortable: false, filterable: false, renderCell: (params) => <span>{params.row.datahorasaida.split(' ')[1]}</span> },
     { field: 'permanencia', headerName: 'Permanência', width: 130, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.permanencia)}</span> },
+    { field: 'origem_acesso_saida', headerName: 'Como saiu', width: 100, sortable: false, filterable: false, renderCell: (params) => <span>{formatOrigemAcesso(params.row.origem_acesso_saida)}</span> },
     { field: 'valordesc', headerName: 'Valor Desc', width: 100, sortable: false, filterable: false, renderCell: (params) => <span>R$ {params.row.valordesc},00</span> },
     { field: 'tempodesc', headerName: 'Tempo Desc', width: 100, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.tempodesc)}</span>  },
     { field: 'faixa_valor', headerName: 'Compras até', width: 150, sortable: false, filterable: false, renderCell: (params) => <span>{faixaDeValorNum(params.row.tempodesc)}</span> } 
@@ -134,24 +156,15 @@ const faixaDeValorNum = (tempodesc) => {
       setSnackbarOpen(true);
       return;
     }
-
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
-
-    if (startDate && endDate && end.diff(start, 'day') > 30) {
-      setSnackbarMessage('O período de busca não pode exceder 30 dias.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      return;
-    }
-
-    fetchData(
-      startDate ? `${startDate} 00:00:00` : '',
-      endDate ? `${endDate} 23:59:59` : '',
-      ticket,
-      placa
-    );
+  
+    const start = dayjs(startDate).format('YYYY-MM-DD HH:mm:ss');
+    const end = dayjs(endDate).format('YYYY-MM-DD HH:mm:ss');
+    const valStart = dayjs(validacaoStart).format('YYYY-MM-DD HH:mm:ss');
+    const valEnd = dayjs(validacaoEnd).format('YYYY-MM-DD HH:mm:ss');
+  
+    fetchData(start, end, ticket, placa, valStart, valEnd, order);
   };
+  
 
   // Função para limpar o filtro
   const handleClearFilter = () => {
@@ -159,6 +172,9 @@ const faixaDeValorNum = (tempodesc) => {
     setEndDate('');
     setTicket('');
     setPlaca('');
+    setValidacaoStart('');
+    setValidacaoEnd('');
+    setOrder('');
     fetchData();
   };
 
@@ -184,8 +200,7 @@ const faixaDeValorNum = (tempodesc) => {
       body: mediaData,
       startY: 20, // Posição Y onde a tabela de médias começa
       theme: 'grid',
-      headStyles: { fillColor: [22, 160, 133] },
-      styles: { fontSize: 12, halign: 'center' }
+   
     });
   
     // Configurar dados para a tabela principal
@@ -198,6 +213,7 @@ const faixaDeValorNum = (tempodesc) => {
       row.terminal_saida || 'N/A',
       row.datahorasaida ? row.datahorasaida.split(' ')[1] : 'N/A',
       formatPermanencia(row.permanencia),
+      formatOrigemAcesso(row.origem_acesso_saida) || 'N/A',
       'R$ '+row.valordesc+',00' || 'N/A',
       formatPermanencia(row.tempodesc) || 'N/A',
       faixaDeValorNum(row.tempodesc) // Adiciona a faixa de valor ao PDF
@@ -205,7 +221,7 @@ const faixaDeValorNum = (tempodesc) => {
   
     // Adicionar a tabela principal abaixo da tabela de médias
     doc.autoTable({
-      head: [['Ticket', 'Placa', 'Entrada', 'Data Entrada', 'Validação', 'Saída', 'Hora Saída', 'Permanência', 'Valor Desc', 'Tempo Desc', 'Compras até']],
+      head: [['Ticket', 'Placa', 'Entrada', 'Data Entrada', 'Validação', 'Saída', 'Hora Saída', 'Permanência', 'Como saiu', 'Valor Desc', 'Tempo Desc', 'Compras até']],
       body: tableData,
       startY: doc.autoTable.previous.finalY + 10, // Começa após a tabela de médias, com um espaço de 10 unidades
       theme: 'grid',
@@ -255,7 +271,7 @@ const faixaDeValorNum = (tempodesc) => {
       totalTickets: totalTickets
     };
   };
-     
+   
   
   
   // No seu useEffect, após fetchData, adicione:
@@ -286,15 +302,26 @@ const faixaDeValorNum = (tempodesc) => {
         Validações Hiper
       </Typography>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, mb: 2 }}>        
-        <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
-          <TextField
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, mb: 2 }}>
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1-content"
+          id="panel1-header"
+        >
+          <Typography sx={{display: 'flex', alignItems: 'center', gap: '15px'}}>Filtros <FilterAltIcon /></Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+        <Box>
+          <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
+             <TextField
+    
             label="Ticket"
             value={ticket}
             onChange={(e) => setTicket(e.target.value)}
             sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
-          <TextField
+          <TextField    
             label="Placa"
             value={placa}
             onChange={handlePlacaChange}
@@ -302,6 +329,7 @@ const faixaDeValorNum = (tempodesc) => {
             sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />        
           <TextField
+    
             label="Data Inicial"
             type="date"
             value={startDate}
@@ -310,6 +338,7 @@ const faixaDeValorNum = (tempodesc) => {
             sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
           <TextField
+    
             label="Data Final"
             type="date"
             value={endDate}
@@ -317,30 +346,46 @@ const faixaDeValorNum = (tempodesc) => {
             InputLabelProps={{ shrink: true }}
             sx={{width: {xs: '100%', sm: '100%', md: '170px'}}}
           />
-          <Box sx={{display: 'flex', gap: '10px'}}>
-             <Tooltip sx={{flexGrow: '1'}} arrow title="Aplicar Filtro">
-            <Button variant="contained" onClick={handleApplyFilter} >
-              <FilterAltIcon />
-            </Button>
+           <fieldset style={{display: 'flex', gap: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '-10px'}}>
+           <legend style={{padding: '0 10px'}}>Período de validação</legend>           
+            <TextField label="De" type="datetime-local" value={validacaoStart} onChange={(e) => setValidacaoStart(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <TextField label="Até" type="datetime-local" value={validacaoEnd} onChange={(e) => setValidacaoEnd(e.target.value)} InputLabelProps={{ shrink: true }} />
+          </fieldset>
+          <FormControl sx={{ width: '280px' }} margin="normal">
+            <InputLabel>Ordenar por data de entrada</InputLabel>
+            <Select
+              value={order}
+              onChange={(e) => setOrder(e.target.value)}
+              label="Ordenar por data de entrada"
+            >
+              <MenuItem value="asc">Do mais antigo para o mais recente</MenuItem>
+              <MenuItem value="desc">Do mais recente para o mais antigo</MenuItem>
+            </Select>
+          </FormControl>
+          </Box>         
+          <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap', paddingTop: '15px'}}>          
+          
+            <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Aplicar Filtro">
+              <Button variant="contained" onClick={handleApplyFilter} startIcon={<FilterAltIcon />}>Filtrar</Button>
             </Tooltip>
-            <Tooltip sx={{flexGrow: '1'}} arrow title="Limpar Filtro">
-            <Button variant="outlined" onClick={handleClearFilter}>
-              <FilterAltOffIcon />
-            </Button>
+            <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Limpar Filtro">
+              <Button variant="outlined" onClick={handleClearFilter} startIcon={<FilterAltOffIcon />}>Limpar</Button>
             </Tooltip>
-            <Tooltip sx={{flexGrow: '1'}} arrow title="Gerar Relatório">
-            <Button variant="contained" color="secondary" onClick={generatePDF}>
-              <TextSnippetIcon />
-            </Button>
+            <Tooltip sx={{width: {xs: '100%', sm: '100%', md: '180px'}}} arrow title="Gerar Relatório">
+              <Button variant="contained" color="secondary" onClick={generatePDF} startIcon={<TextSnippetIcon />}>Relatório</Button>
             </Tooltip>
+        
           </Box>
          
         </Box>
-        <Box sx={{display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap'}}>
+        </AccordionDetails>
+      </Accordion>      
+
+        <Box sx={{display: 'flex', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
           <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
             <CardContent>
             <Typography variant='caption'>Total de Tickets</Typography>
-            <Typography variant='h6'>{averages.totalTickets}</Typography>
+            <Typography variant='h6'>{averages.totalTickets?.toLocaleString('pt-BR')}</Typography>
             </CardContent>
           </Card>
           <Card elevation={3} sx={{minWidth: '150px', width:{xs: '100%', sm: '100%', md: '150px'}}}>
@@ -372,7 +417,7 @@ const faixaDeValorNum = (tempodesc) => {
             <Typography variant='caption'>Terminal de Entrada Mais Utilizado</Typography>
             <Typography variant='h6'>{averages.terminalEntradaMaisUtilizado || 'N/A'}</Typography>
             <Box sx={{display: 'flex', justifyContent: 'end'}}>
-              <Typography variant='caption'>{averages.terminalEntradaCount || 0} acessos</Typography>
+              <Typography variant='caption'>{averages.terminalEntradaCount?.toLocaleString('pt-BR') || 0} acessos</Typography>
             </Box>            
             </CardContent>
           </Card>
@@ -381,7 +426,7 @@ const faixaDeValorNum = (tempodesc) => {
             <Typography variant='caption'>Terminal de Saída Mais Utilizado</Typography>
             <Typography variant='h6'>{averages.terminalSaidaMaisUtilizado || 'N/A'}</Typography>
             <Box sx={{display: 'flex', justifyContent: 'end'}}>
-              <Typography variant='caption'>{averages.terminalSaidaCount || 0} acessos</Typography>
+              <Typography variant='caption'>{averages.terminalSaidaCount?.toLocaleString('pt-BR') || 0} acessos</Typography>
             </Box>
             </CardContent>
           </Card>

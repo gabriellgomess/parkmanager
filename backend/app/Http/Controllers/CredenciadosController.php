@@ -8,9 +8,28 @@ use App\Models\Credenciados;
 
 class CredenciadosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $cartao = $request->input('cartao');
+        $nome = $request->input('nome');
+        $placa = $request->input('placa');
+
         $query = Credenciados::leftJoin('ctrplaca', 'cartoes.cartao', '=', 'ctrplaca.cartao');
+        
+        // Filtro por cartao
+        if ($cartao) {
+            $query->where('cartoes.cartao', $cartao);
+        }
+    
+        // Filtro por nome
+        if ($nome) {
+            $query->where('cartoes.nome', 'like', '%' . $nome . '%');
+        }
+        // Filtro por placa
+        if ($placa) {
+            $query->where('ctrplaca.placa', 'like', '%' . $placa . '%');
+        }
+    
         $query->select(
             'cartoes.*', 
             'ctrplaca.cartao as p_cartao',
@@ -18,12 +37,15 @@ class CredenciadosController extends Controller
             'ctrplaca.cor as p_cor',
             'ctrplaca.marca as p_marca',
             'ctrplaca.modelo as p_modelo',
-            'ctrplaca.ano as p_ano',
+            'ctrplaca.ano as p_ano'
         )
         ->orderBy('cartoes.cartao', 'asc');
+    
         $credenciados = $query->get();
+        
         return response()->json($credenciados);
     }
+    
 
     public function show($id)
     {
