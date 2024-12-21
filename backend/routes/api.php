@@ -12,6 +12,7 @@ use App\Http\Controllers\CredenciadosController;
 use App\Http\Controllers\CredenciadoAcessosController;
 use App\Http\Controllers\PagamentosController;
 use App\Http\Controllers\LotController;
+use App\Http\Controllers\BlacklistController;
 
 // Rotas de Autenticação
 Route::post("register", [AuthController::class, "register"]);
@@ -45,6 +46,9 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
 
     // Rota para contagem de patio
     Route::get('patio', [LotController::class, 'countLots']);
+
+    // Placas Indesejadas
+    Route::get('blacklist', [BlacklistController::class, 'getLogs']);
     
 });
 

@@ -5,6 +5,7 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 
 import Terminais from '../components/Terminais';
+import PlacasIndesejadas from '../components/PlacasIndesejadas';
 
 const Dashboard = () => {
   const { config } = useContext(AuthContext);
@@ -43,7 +44,8 @@ const Dashboard = () => {
   }, [config.APP_URL]);
 
   return (
-    <Box
+    <Box>
+     <Box
       sx={{
         display: 'flex',
         width: '100%',
@@ -63,6 +65,7 @@ const Dashboard = () => {
           flexWrap: 'wrap',
           alignItems: 'start',
           justifyContent: 'start',
+          alignContent: 'start',
         }}
       >
         <Card sx={{ width: '100%', height: '220px', backgroundColor: '#33eb91' }}>
@@ -76,6 +79,7 @@ const Dashboard = () => {
         <Card
           sx={{
             flexGrow: 1,
+            maxWidth: { xs: '100%', md: '50%' },
             width: { xs: '100%', md: 'auto' },
             height: '150px',
             backgroundColor: '#33c9dc',
@@ -98,6 +102,7 @@ const Dashboard = () => {
         <Card
           sx={{
             flexGrow: 1,
+            maxWidth: { xs: '100%', md: '50%' },
             width: { xs: '100%', md: 'auto' },
             height: '150px',
             backgroundColor: '#ffef62',
@@ -110,8 +115,15 @@ const Dashboard = () => {
             </Typography>
           </CardContent>
         </Card>
-      </Box>
+      </Box> 
+        
+      
+    </Box> 
+    <Box>
+      <PlacasIndesejadas />
     </Box>
+    </Box>
+    
   );
 };
 

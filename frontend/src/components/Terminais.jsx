@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import IconEntrada from '../assets/entrada.png';
 import IconSaida from '../assets/saida.png';
 import IconCaixa from '../assets/caixa.png';
-import AuthContext from '../context/AuthContext'; // Importa o contexto
+import AuthContext from '../context/AuthContext';
 
 const Terminais = () => {
     const [terminais, setTerminais] = useState([]);
