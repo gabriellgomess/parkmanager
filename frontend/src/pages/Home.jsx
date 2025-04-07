@@ -63,17 +63,22 @@ const Home = () => {
             textShadow: '4px 4px 3px rgba(0,0,0,0.5)',
           }}
         >
-          {config?.APP_TITLE_HOME || 'Título padrão'} {/* Usa o título do config */}
+          {`${import.meta.env.VITE_REACT_APP_TITLE_HOME}`}
         </Typography>
-        <Typography variant="h6" align="center" style={{ color: '#fff', textShadow: '4px 4px 3px rgba(0,0,0,0.5)' }}>
-          {config?.APP_SUBTITLE_HOME || 'Subtítulo padrão'} {/* Usa o subtítulo do config */}
-        </Typography>
+        
+          <Typography variant="h6" align="center" style={{ color: '#fff', textShadow: '4px 4px 3px rgba(0,0,0,0.5)' }}>
+            {`${import.meta.env.VITE_REACT_APP_SUBTITLE_HOME}`} 
+          </Typography>
+       
+        
       </Box>
 
       <Box sx={{ textAlign: 'center' }}>
+      <a href="https://nexustech.net.br" target='blank'>
         <Typography variant="caption" align="center" style={{ color: '#fff', textShadow: '4px 4px 3px rgba(0,0,0,0.5)' }}>
           &copy; NexusTech {new Date().getFullYear()} - Todos os direitos reservados
         </Typography>
+      </a>
       </Box>
 
       <Modal open={open} onClose={() => setOpen(false)} sx={{ position: 'absolute', top: '40%' }}>
@@ -83,7 +88,6 @@ const Home = () => {
           <Button variant="contained" fullWidth onClick={handleLogin} disabled={loading}>
             {loading ? 'Carregando...' : 'Entrar'}
           </Button>
-          <Typography variant='caption'>admin@admin | Nexus@2024</Typography>
           {error && <Typography>{error}</Typography>}
         </Box>
       </Modal>

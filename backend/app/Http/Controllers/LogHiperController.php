@@ -18,6 +18,14 @@ class LogHiperController extends Controller
         $validacaoB = $request->input('validacaoB');
         $order = $request->input('order');
 
+	// Ajusta os horários para pegar o dia inteiro
+if ($dataInicial) {
+    $dataInicial = explode(' ', $dataInicial)[0] . ' 00:00:00';
+}
+if ($dataFinal) {
+    $dataFinal = explode(' ', $dataFinal)[0] . ' 23:59:59';
+}
+
         // Usa o modelo LogHiper e força a conexão 'pgsql' para a consulta
         $query = LogHiper::leftJoin('etetickets', 'log_hiper.ticket', '=', 'etetickets.ticket')
         ->leftJoin('etstickets', 'log_hiper.ticket', '=', 'etstickets.ticket')
@@ -35,7 +43,7 @@ class LogHiperController extends Controller
         $query->whereBetween('log_hiper.datahoraentrada', [$dataInicial, $dataFinal]);
         } else if (!$ticket && !$placa) {
         // Aplica o filtro de 30 dias apenas quando não há filtros de ticket ou placa
-        $query->whereBetween('log_hiper.datahoraentrada', [now()->subDays(30), now()]);
+        $query->whereBetween('log_hiper.datahoraentrada', [now()->startOfDay(), now()->endOfDay()]);
         }
 
         // Aplica o filtro de ticket, se fornecido

@@ -18,12 +18,18 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import menuItems from './MenuItems';
 import AuthContext from '../context/AuthContext';
 
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+
 import Logo from '../assets/logo_lg_light.png';
 import LogoMobile from '../assets/logo_light.png';
+
+import { useParams } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -94,8 +100,11 @@ const Drawer = styled(MuiDrawer, {
 export default function Layout({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const { logout, user, config } = React.useContext(AuthContext); // Obtém o config
+  const { logout, user, config, audioEnabled, enableAudio, disableAudio} = React.useContext(AuthContext); // Obtém o config
   const navigate = useNavigate();
+  const hostname = window.location.hostname;
+const port = window.location.port; 
+const ip = port ? `${hostname}:${port}` : hostname; // Extrai o parâmetro da rota
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -111,7 +120,6 @@ export default function Layout({ children }) {
       navigate('/');
     }
   };
-
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -131,10 +139,10 @@ export default function Layout({ children }) {
           </Box>
           <Box sx={{display: {xs: 'block', sm: 'block', md: 'none'}}}>
             <img src={LogoMobile} alt="Logo" width={60} />
-          </Box>
+          </Box>         
           
           <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Avatar alt={user?.name} src={`${config?.APP_URL}/storage/${user?.profile_photo}`} />
+          <Avatar alt={user?.name} src={`http://${ip}/storage/${user?.profile_photo}`} />
             <Box>
               <Typography variant="body2" sx={{ ml: 'auto', lineHeight: '1px' }}>
                 {user?.name}
@@ -154,7 +162,41 @@ export default function Layout({ children }) {
         </DrawerHeader>
         <Divider />
         <List>
-          {menuItems.map((item) => (
+        {!audioEnabled ? ( 
+          <ListItem
+            disablePadding
+            sx={{display: 'block'}}
+            onClick={enableAudio}
+          >
+            <ListItemButton
+              component='button'
+              sx={{minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5}}
+            >
+              <ListItemIcon sx={{minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'red'}}>
+                <NotificationsOffIcon />
+              </ListItemIcon>
+              <ListItemText primary='Alerta de placa' sx={{opacity: open ? 1 : 0}} />
+            </ListItemButton>            
+          </ListItem>
+          ):
+          (
+            <ListItem
+            disablePadding
+            sx={{display: 'block'}}
+            onClick={disableAudio}
+          >
+            <ListItemButton
+              component='button'
+              sx={{minHeight: 48, justifyContent: open ? 'initial' : 'center', px: 2.5}}
+            >
+              <ListItemIcon sx={{minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'green'}}>
+                <NotificationsActiveIcon />
+              </ListItemIcon>
+              <ListItemText primary='Alerta de placa' sx={{opacity: open ? 1 : 0}} />
+            </ListItemButton>
+          </ListItem>
+          )}
+          {menuItems(user || {}).filter(item => item.visible).map((item) => (
             <ListItem
               key={item.name}
               disablePadding
@@ -182,7 +224,8 @@ export default function Layout({ children }) {
                 <ListItemText primary={item.name} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>
             </ListItem>
-          ))}
+          ))}         
+
         </List>
         <Divider />
       </Drawer>

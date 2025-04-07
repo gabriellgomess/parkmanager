@@ -40,7 +40,7 @@ class PagamentosController extends Controller
         if ($dataInicial && $dataFinal) {
             $pagamentosQuery->whereBetween('p.datahoraentrada', [$dataInicial.' 00:00:00', $dataFinal.' 23:59:59']);
         } else {
-            $pagamentosQuery->whereBetween('p.datahoraentrada', [now()->subDays(30), now()]);
+            $pagamentosQuery->whereBetween('p.datahoraentrada', [now()->startOfDay(), now()->endOfDay()]);
         }
 
         // Filtro por ticket

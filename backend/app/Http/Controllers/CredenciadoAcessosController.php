@@ -25,7 +25,6 @@ class CredenciadoAcessosController extends Controller
                     ->on('t1.data', '=', 't2.dataentrada');
             })
             ->select(
-                't1.id as etetickets_id',
                 't1.data as etetickets_data',
                 't1.ticket as etetickets_ticket',
                 't1.placa as etetickets_placa',

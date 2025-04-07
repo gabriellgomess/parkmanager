@@ -13,14 +13,18 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AlertSnackbar from '../components/AlertSnackbar';
 import Tooltip from '@mui/material/Tooltip';
 import AuthContext from '../context/AuthContext'; // Importa o contexto
+import { useParams } from 'react-router-dom';
 
 const Users = () => {
-  const { config } = useContext(AuthContext); // Pega o config do contexto
-  const apiUrl = `${config.APP_URL}/api/users`; // Usa config em vez da variável de ambiente
+  const { ip } = useContext(AuthContext); // Pega o config do contexto  
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [alertData, setAlertData] = useState({ open: false, message: '', severity: 'success' });
+
+
+const apiUrl = `http://${ip}/api/users`; // Usa config em vez da variável de ambiente
+
   const [passwordValidation, setPasswordValidation] = useState({
     minLength: false,
     hasUpperCase: false,
@@ -229,7 +233,7 @@ const Users = () => {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell><Avatar alt={user?.name} src={`${config.APP_URL}/storage/${user?.profile_photo}`} /></TableCell>
+                    <TableCell><Avatar alt={user?.name} src={``} /></TableCell>{/*  http://${ip}/storage/${user?.profile_photo} */}
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.cpf}</TableCell>
@@ -255,8 +259,7 @@ const Users = () => {
             {users.map((user) => (
               <Box key={user.id} sx={{ display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid #ccc', borderRadius: '5px', p: 2, mb: 2 }}>
                 <Box sx={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  {console.log(`FOTO: ${config.APP_URL}/storage/${user?.profile_photo}`)}
-                  <Avatar alt={user?.name} src={`${config.APP_URL}/storage/${user?.profile_photo}`} />
+                  <Avatar alt={user?.name} src={`http://${ip}/storage/${user?.profile_photo} `} />
                   <Typography variant="h6">{user.name}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: '10px' }}>
@@ -366,7 +369,7 @@ const Users = () => {
             ) : formData.existing_profile_photo ? (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
                 <Avatar
-                  src={`${config.APP_URL}/storage/${formData.existing_profile_photo}`}
+                  src={``} // http://${ip}/storage/${formData.existing_profile_photo}
                   alt="Foto atual"
                   sx={{ width: 100, height: 100 }}
                 />

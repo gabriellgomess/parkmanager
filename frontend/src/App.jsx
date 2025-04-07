@@ -6,11 +6,13 @@ import Home from './pages/Home';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import Dashboard from './pages/Dashboard';
+import MonitoramentoPlacas from './pages/MonitoramentoPlacas';
 import EntradasSaidas from './pages/EntradasSaidas';
 import ValidacaoHiper from './pages/ValidacaoHiper';
 import Credenciados from './pages/Credenciados';
 import Pagamentos from './pages/Pagamentos';
 import Users from './pages/Users';
+import GerirPlacasIndesejadas from './pages/GerirPlacasIndesejadas';
 
 const App = () => {
   useEffect(() => {
@@ -32,9 +34,19 @@ const App = () => {
           }
         />
         <Route
-          path="/users"
+          path="/placas-indesejadas"
           element={
             <PrivateRoute>
+              <Layout>
+                <GerirPlacasIndesejadas />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <PrivateRoute requiredNivelAcesso={1}>
               <Layout>
                 <Users />
               </Layout>

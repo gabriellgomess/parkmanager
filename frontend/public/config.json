@@ -1,6 +1,6 @@
 {
 
-"APP_URL":"http://localhost:8000",
+"APP_URL":"${import.meta.env.VITE_REACT_APP_URL}",
 "APP_NAME":"ParkManager",
 "APP_TITLE_HOME":"Sistema de Gerenciamento de Estacionamento",
 "APP_SUBTITLE_HOME":"Gerencie o estacionamento de forma inteligente.",

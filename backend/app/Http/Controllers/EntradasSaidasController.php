@@ -14,11 +14,12 @@ class EntradasSaidasController extends Controller
         $dataInicial = $request->input('dataA');
         $dataFinal = $request->input('dataB');
         $ticket = $request->input('ticket');
-        $placa = $request->input('placa');        
+        $placa = $request->input('placa');
         $permanenciaInicial = $request->input('permanenciaInicial');
-        $permanenciaFinal = $request->input('permanenciaFinal');
+        $permanenciaFinal = $request->input('permanenciaFinal');        
         $veiculosNoPatio = filter_var($request->input('veiculosNoPatio'), FILTER_VALIDATE_BOOLEAN);
         $saidaHiper = filter_var($request->input('saidaHiper'), FILTER_VALIDATE_BOOLEAN);
+        $setor = $request->input('setorSelecionado') ? $request->input('setorSelecionado') : 'todos';
         $order = $request->input('order');
 
         $query = EntradasSaidas::from('etetickets')
@@ -54,13 +55,13 @@ class EntradasSaidasController extends Controller
                 'etstickets.saiucomhiper as etstickets_saiucomhiper',
                 'etstickets.setor as etstickets_setor',
                 'etstickets.origemacesso as etstickets_origemacesso'
-            );            
+            );
 
         // Filtro por data
         if ($dataInicial && $dataFinal) {
             $query->whereBetween('etetickets.data', [$dataInicial, $dataFinal]);
         } else if (!$ticket && !$placa && !$permanenciaInicial && !$permanenciaFinal && !$veiculosNoPatio) {
-            $query->whereBetween('etetickets.data', [now()->subDays(7), now()]);
+            $query->whereBetween('etetickets.data', [now()->startOfDay(), now()->endOfDay()]);
         }
 
         // Filtro por ticket
@@ -95,6 +96,11 @@ class EntradasSaidasController extends Controller
                     $query->whereBetween('etetickets.data', [now()->subDays(31), now()]);
                 }
             }
+        }
+
+        // Filtro por setor
+        if ($setor !== 'todos') {
+            $query->where('etetickets.setor', $setor);
         }
 
         // Ordenação

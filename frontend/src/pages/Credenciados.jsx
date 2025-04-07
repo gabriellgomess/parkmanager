@@ -12,6 +12,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { IconButton, Modal, Box, CircularProgress, Typography, Button, Tooltip, TextField, Backdrop, Accordion, AccordionSummary, AccordionDetails, Slider, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useParams } from 'react-router-dom';
 
 const Credenciados = () => {
     const [credenciados, setCredenciados] = useState([]);
@@ -29,7 +30,8 @@ const Credenciados = () => {
     const [saida, setSaida] = useState('');
     const [rangeHours, setRangeHours] = useState([0, 1440]);
     const [order, setOrder] = useState('desc');
-    const { config } = useContext(AuthContext);
+    const { ip } = useContext(AuthContext);
+
 
     const handleRangeHours = (event, newValue) => {
         setRangeHours(newValue);
@@ -51,7 +53,7 @@ const Credenciados = () => {
         return;
         }
         setOpen(true);
-        const response = await axios.get(`${config.APP_URL}/api/credenciados`, {
+        const response = await axios.get(`http://${ip}/api/credenciados`, {
             params: { cartao, nome, placa },
             headers: {
                 Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -114,7 +116,7 @@ const Credenciados = () => {
     };
     
     try {
-        const response = await axios.get(`${config.APP_URL}/api/credenciado-acessos`, {
+        const response = await axios.get(`http://${ip}/api/credenciado-acessos`, {
         params,
         headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -219,16 +221,17 @@ const Credenciados = () => {
     
 
     const columnsHistory = [
-        { field: 'etetickets_ticket', headerName: 'Cartao', width: 80, sortable: false, filterable: false },
-        { field: 'etetickets_placa', headerName: 'Placa', width: 100, sortable: false, filterable: false },
-        { field: 'etetickets_data', headerName: 'Data Entrada', width: 170, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etetickets_data)}</span> },
-        { field: 'etetickets_descricao', headerName: 'Terminal', width: 220, sortable: false, filterable: false },
-        { field: 'etetickets_origemacesso', headerName: 'Modo de Acesso', width: 170, sortable: false, filterable: false },
-        { field: 'etstickets_data', headerName: 'Data Saída', width: 170, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etstickets_data)}</span>  },
-        { field: 'etstickets_descricao', headerName: 'Terminal', width: 220, sortable: false, filterable: false },
-        { field: 'etstickets_origemacesso', headerName: 'Modo de Acesso', width: 200, sortable: false, filterable: false },
-        { field: 'etstickets_permanencia', headerName: 'Permanência', width: 120, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.etstickets_permanencia)}</span> }
+        { field: 'etetickets_ticket', headerName: 'Cartao', flex: 1, sortable: false, filterable: false },
+        { field: 'etetickets_placa', headerName: 'Placa', flex: 2, sortable: false, filterable: false },
+        { field: 'etetickets_data', headerName: 'Data Entrada', flex: 2, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etetickets_data)}</span> },
+        { field: 'etetickets_descricao', headerName: 'Terminal', flex: 1, sortable: false, filterable: false },
+        { field: 'etetickets_origemacesso', headerName: 'Modo de Acesso', flex: 1, sortable: false, filterable: false },
+        { field: 'etstickets_data', headerName: 'Data Saída', flex: 2, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etstickets_data)}</span> },
+        { field: 'etstickets_descricao', headerName: 'Terminal', flex: 2, sortable: false, filterable: false },
+        { field: 'etstickets_origemacesso', headerName: 'Modo de Acesso', flex: 1, sortable: false, filterable: false },
+        { field: 'etstickets_permanencia', headerName: 'Permanência', flex: 1, sortable: false, filterable: false, renderCell: (params) => <span>{formatPermanencia(params.row.etstickets_permanencia)}</span> }
     ];
+    
 
     // Função para gerar o PDF do histórico
     const generateHistoryPDF = () => {
@@ -403,7 +406,7 @@ const Credenciados = () => {
                 <Box sx={{
                     position: 'absolute', top: '50%', left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: '80vw', height: '80vh', bgcolor: 'background.paper',
+                    width: '90vw', height: '80vh', bgcolor: 'background.paper',
                     boxShadow: 24, p: 4,
                 }}>
                     <Typography variant="h6" component="h2">
@@ -411,7 +414,7 @@ const Credenciados = () => {
                     </Typography>
 
                     {/* Filtros */}
-                    <Box sx={{ display: 'flex', gap: '25px' }}>
+                    <Box sx={{ display: 'flex', gap: '25px', flexWrap: 'wrap' }}>
                         <TextField
                             label="Entrada"
                             type="date"
@@ -486,7 +489,7 @@ const Credenciados = () => {
                     {isLoading ? (
                         <CircularProgress sx={{ marginTop: '20px' }} />
                     ) : (
-                        <Box sx={{ height: 500, width: '100%', marginTop: '20px' }}>
+                        <Box sx={{ maxHeight: '300px', width: '100%', marginTop: '20px', overflow: 'auto' }}>
                         <DataGrid
                             rows={historyData}
                             columns={columnsHistory}

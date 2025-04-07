@@ -13,9 +13,11 @@ import 'jspdf-autotable';
 import dayjs from 'dayjs';
 import AuthContext from '../context/AuthContext'; // Importa o contexto
 
+import { useParams } from 'react-router-dom';
+
 
 const ValidacaoHiper = () => {
-  const { config } = useContext(AuthContext);
+  const { ip } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -27,6 +29,7 @@ const ValidacaoHiper = () => {
   const [placaError, setPlacaError] = useState(false);
   const [averages, setAverages] = useState({});
   const [open, setOpen] = useState(false);
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -64,7 +67,7 @@ const ValidacaoHiper = () => {
     if (order) params.order = order;
   
     axios
-      .get(`${config.APP_URL}/api/hiper`, {
+      .get(`http://${ip}/api/hiper`, {
         params,
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,

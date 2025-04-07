@@ -27,6 +27,7 @@ import { ptBR } from '@mui/x-data-grid/locales';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import AuthContext from '../context/AuthContext';
+import { useParams } from 'react-router-dom';
 
 const Pagamentos = () => {
   const [data, setData] = useState([]);
@@ -40,11 +41,13 @@ const Pagamentos = () => {
   const [status_pagamento, setStatusPagamento] = useState('todos');
   const [desconto, setDesconto] = useState('todos');
   const [order, setOrder] = useState('desc');
-  const { config } = useContext(AuthContext);
+  const { ip } = useContext(AuthContext);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+
+
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -72,7 +75,7 @@ const Pagamentos = () => {
 
     handleOpen();
     axios
-      .get(`${config.APP_URL}/api/pagamentos`, {
+      .get(`http://${ip}/api/pagamentos`, {
         params: {
           ...(startDate && { startDate }),
           ...(endDate && { endDate }),
@@ -145,7 +148,7 @@ const Pagamentos = () => {
 
   useEffect(() => {
     fetchData();
-  }, [config.APP_URL]);
+  }, []);
 
   const generatePDF = () => {
     const doc = new jsPDF('landscape');

@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import dayjs from 'dayjs';
 import AuthContext from '../context/AuthContext';
+import { useParams } from 'react-router-dom';
 
 const EntradasSaidas = () => {
   const [data, setData] = useState([]);
@@ -26,9 +27,14 @@ const EntradasSaidas = () => {
   const [veiculosNoPatio, setVeiculosNoPatio] = useState(false);
   const [saidaHiper, setSaidaHiper] = useState(false);
   const [order, setOrder] = useState('desc');
+  // const hostname = window.location.hostname;
+  // const port = window.location.port; 
+  // const ip = port ? `${hostname}:${port}` : hostname;
 
   const [rangeHours, setRangeHours] = useState([0, 1440]);
-  const { config } = useContext(AuthContext);
+  const { setores, ip } = useContext(AuthContext);
+
+  const [setorSelecionado, setSetorSelecionado] = useState('todos');
 
   // States for Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -59,39 +65,41 @@ const EntradasSaidas = () => {
     setRangeHours(newValue);
   }
 
-  const fetchData = (start = '', end = '', ticket = '', placa = '', order = '') => {
+  const fetchData = (start = '', end = '', ticket = '', placa = '', order = '', permanenciaInicial = 0, permanenciaFinal = 1440, setorSelecionado) => {
     handleOpen();
     const params = {
-      ...(start && { dataA: start }),
-      ...(end && { dataB: end }),
-      ...(ticket && { ticket }),
-      ...(placa && { placa }),
-      ...(order && { order }),
-      ...(rangeHours[0] !== 0 || rangeHours[1] !== 1440 && { permanenciaInicial: rangeHours[0], permanenciaFinal: rangeHours[1] }),
-      veiculosNoPatio,
-      saidaHiper,
+        ...(start && { dataA: start }),
+        ...(end && { dataB: end }),
+        ...(ticket && { ticket }),
+        ...(placa && { placa }),
+        ...(order && { order }),
+        ...(permanenciaInicial !== 0 || permanenciaFinal !== 1440 ? { permanenciaInicial, permanenciaFinal } : {}),
+        veiculosNoPatio,
+        saidaHiper,
+        setorSelecionado
     };
-  
-    axios.get(`${config.APP_URL}/api/entradas-saidas`, {
-      params,
-      headers: {
-        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-      },
+
+    axios.get(`http://${ip}/api/entradas-saidas`, {
+        params,
+        headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        },
     })
     .then(response => {
-      handleClose();
-      setData(response.data);
+        handleClose();
+        setData(response.data);
     })
     .catch(error => {
-      handleClose();
-      console.error("Erro ao buscar os dados:", error);
+        handleClose();
+        console.error("Erro ao buscar os dados:", error);
     });
-  };
+};
+
   
 
   useEffect(() => {
     fetchData();
-  }, [config.APP_URL]);
+  }, []);
 
   const formatData = (data) => {
     if (!data) return "N/A";
@@ -205,7 +213,8 @@ const EntradasSaidas = () => {
       placa,
       order,
       rangeHours[0],
-      rangeHours[1]
+      rangeHours[1],
+      setorSelecionado
 
 
     );
@@ -226,6 +235,7 @@ const EntradasSaidas = () => {
     { field: 'etetickets_ticket', headerName: 'Ticket', width: 100, sortable: false, filterable: false },
     { field: 'etetickets_placa', headerName: 'Placa', width: 100, sortable: false, filterable: false },
     { field: 'etetickets_entrada', headerName: 'Entrada', width: 150, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etetickets_entrada)}</span> },
+    { field: 'etetickets_setor', headerName: 'Setor', width: 130, sortable: false, filterable: false },
     { field: 'etetickets_origemacesso', headerName: 'Modo de entrada', width: 130, sortable: false, filterable: false },
     { field: 'etetickets_descricao', headerName: 'Terminal Entrada', width: 150, sortable: false, filterable: false },
     { field: 'etstickets_saida', headerName: 'Saída', width: 150, sortable: false, filterable: false, renderCell: (params) => <span>{formatData(params.row.etstickets_saida)}</span> },
@@ -308,13 +318,12 @@ const isFilterApplied = () => {
 // Mensagem condicional para os dados exibidos
 const filterMessage = isFilterApplied()
   ? `Dados referente a ${startDate ? `Data Inicial: ${startDate.split('-').reverse().join('/')} ` : ''}${endDate ? `Data Final: ${endDate.split('-').reverse().join('/')} ` : ''}${ticket ? `Ticket: ${ticket} ` : ''}${placa ? `Placa: ${placa} ` : ''}${rangeHours[0] !== 0 || rangeHours[1] !== 1440 ? `Permanência entre ${formatTime(rangeHours[0])} - ${formatTime(rangeHours[1])}` : ''}`
-  : "Dados referente aos últimos 7 dias";
+  : "Dados referente ao dia de hoje";
 const textTooltip = () => {
   return(
     <h3>Teste texto h3</h3>
   )
 }
-
 
   return (
     <Box sx={{ height: 600, width: '100%' }}>
@@ -367,9 +376,26 @@ const textTooltip = () => {
               <MenuItem value="asc">Do mais antigo para o mais recente</MenuItem>
               <MenuItem value="desc">Do mais recente para o mais antigo</MenuItem>
             </Select>
-          </FormControl>
+          </FormControl>         
+
           </Box>
           <Box sx={{display: 'flex', alignItems: 'end', justifyContent: 'start', gap: '15px', flexWrap: 'wrap'}}>
+          <FormControl sx={{ width: '280px' }} margin="normal">
+            <InputLabel>Setor</InputLabel>
+            <Select
+              value={setorSelecionado}
+              onChange={(e) => setSetorSelecionado(e.target.value)}
+              label="Setor"
+            >
+              {/* Opção de TODOS */}
+              <MenuItem value="todos">TODOS</MenuItem>
+
+              {/* Opções dinâmicas */}
+              {setores?.map((setor) => (
+                <MenuItem key={setor.nome} value={setor.nome}>{setor.nome}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <FormControlLabel 
             control={<Checkbox checked={veiculosNoPatio} onChange={(e) => setVeiculosNoPatio(e.target.checked)} />} 
             label="Veículos no pátio" 
@@ -509,7 +535,7 @@ const textTooltip = () => {
         pageSize={10}
         rowsPerPageOptions={[10, 20, 50, data.length]}
         disableRowSelectionOnClick
-        getRowId={(row) => row.etetickets_ticket}
+        getRowId={(row) => `${row.etetickets_ticket}-${row.etetickets_entrada}-${row.etstickets_saida}`}
         disableColumnMenu // Desativa o menu de colunas (ocultar e gerenciar)       
       />
 

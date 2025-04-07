@@ -8,22 +8,26 @@ import IconEntrada from '../assets/entrada.png';
 import IconSaida from '../assets/saida.png';
 import IconCaixa from '../assets/caixa.png';
 import AuthContext from '../context/AuthContext';
+import { useParams } from 'react-router-dom';
 
 const Terminais = () => {
     const [terminais, setTerminais] = useState([]);
     const [open, setOpen] = useState(false);
     const [openBackdrop, setOpenBackdrop] = useState(false);
-    const [ip, setIp] = useState('');
+    const [ipt, setIpT] = useState('');
     const { config } = useContext(AuthContext); // Pega o config do contexto
+    const hostname = window.location.hostname;
+const port = window.location.port; 
+const ip = port ? `${hostname}:${port}` : hostname;
 
     const handleOpen = (ipcam) => { 
         setOpen(true);
-        setIp(ipcam);
+        setIpT(ipcam);
     };
     
     const handleClose = () => {
         setOpen(false);
-        setIp('');
+        setIpT('');
     };
 
     const handleCloseBackdrop = () => {
@@ -44,11 +48,11 @@ const Terminais = () => {
 
     useEffect(() => {
         setOpenBackdrop(true);
-        axios.get(`${config.APP_URL}/api/terminais`, {
+        axios.get(`http://${ip}/api/terminais`, {
             headers: {
                 Authorization: `Bearer ${sessionStorage.getItem('token')}`,
               },
-        }) // Usa config em vez da variável de ambiente
+        }) 
             .then((response) => {
                 setOpenBackdrop(false);
                 setTerminais(response.data);                
@@ -57,7 +61,7 @@ const Terminais = () => {
                 setOpenBackdrop(false);
                 console.error('Houve um erro ao buscar os terminais:', error);
             });
-    }, [config.APP_URL]); // Adiciona config.APP_URL como dependência
+    }, []); 
 
     // formata datetime para o padrão brasileiro
     const formatDateTime = (datetime) => {
@@ -66,7 +70,7 @@ const Terminais = () => {
     };
 
     const formatVersion = (version) => {
-        let v = version.split(' ');
+        let v = version?.split(' ');
         let versao = v[0];
         return 'ParkingPlus ' + versao;
     };

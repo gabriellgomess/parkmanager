@@ -13,6 +13,9 @@ use App\Http\Controllers\CredenciadoAcessosController;
 use App\Http\Controllers\PagamentosController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\BlacklistController;
+use App\Http\Controllers\SetorController;
+use App\Http\Controllers\VagasPmController;
+use App\Http\Controllers\PlacaIndesejadaController;
 
 // Rotas de Autenticação
 Route::post("register", [AuthController::class, "register"]);
@@ -48,8 +51,13 @@ Route::group(["middleware" => ["auth:sanctum"]], function () {
     Route::get('patio', [LotController::class, 'countLots']);
 
     // Placas Indesejadas
-    Route::get('blacklist', [BlacklistController::class, 'getLogs']);
-    
+    Route::get('blacklist/listar', [BlacklistController::class, 'listarOcorrenciasDoDia']);
+    Route::get('blacklist/notify', [BlacklistController::class, 'getOcorrenciasLPR']);
+
+    Route::get('vagas', [VagasPmController::class, 'show']);
+    Route::put('vagas', [VagasPmController::class, 'update']);
+
+    Route::get('setores', [SetorController::class, 'listarNomes']);
+
+    Route::apiResource('placas-indesejadas', PlacaIndesejadaController::class);
 });
-
-
